@@ -1,86 +1,73 @@
-/* ==========================================================
-   TravelMind AI — frontend logic
-   ----------------------------------------------------------
-   This runs entirely on mock data so the UI is demo-ready with
-   no backend. To wire it to the real system: replace the body
-   of handleUserMessage()'s setTimeout with a fetch() call to
-   the FastAPI /chat endpoint, and feed its JSON response into
-   buildItinerary()'s output shape (see the object returned by
-   buildItinerary below for the exact fields the UI expects).
-========================================================== */
-
-/* ---------------- Mock knowledge base ---------------- */
-
 const LANDMARKS = {
   goa: [
-    { t: 'Baga Beach sunrise walk', n: 'Quiet tide, good light for photos.' },
-    { t: 'Fort Aguada', n: '17th-century Portuguese fort with lighthouse views.' },
-    { t: 'Dudhsagar Falls jeep safari', n: 'A four-tiered waterfall inside a wildlife sanctuary.' },
-    { t: 'Spice plantation walk', n: 'Cardamom, pepper and betel nut groves.' },
-    { t: 'Fontainhas heritage lanes', n: "Panjim's Latin Quarter, pastel Portuguese houses." },
-    { t: 'Anjuna flea market', n: 'Handmade jewellery, music and beach shacks.' },
-    { t: 'Chapora Fort viewpoint', n: 'Hilltop fort overlooking the river mouth.' },
-    { t: 'Assagao café lunch', n: 'Slow lanes and converted Portuguese villas.' }
+    { t: 'Baga Beach sunrise walk', n: 'Quiet tide, good light for photos.', r: 4.5 },
+    { t: 'Fort Aguada', n: '17th-century Portuguese fort with lighthouse views.', r: 4.3 },
+    { t: 'Dudhsagar Falls jeep safari', n: 'A four-tiered waterfall inside a wildlife sanctuary.', r: 4.7 },
+    { t: 'Spice plantation walk', n: 'Cardamom, pepper and betel nut groves.', r: 4.2 },
+    { t: 'Fontainhas heritage lanes', n: "Panjim's Latin Quarter, pastel Portuguese houses.", r: 4.6 },
+    { t: 'Anjuna flea market', n: 'Handmade jewellery, music and beach shacks.', r: 4.1 },
+    { t: 'Chapora Fort viewpoint', n: 'Hilltop fort overlooking the river mouth.', r: 4.4 },
+    { t: 'Assagao café lunch', n: 'Slow lanes and converted Portuguese villas.', r: 4.5 }
   ],
   manali: [
-    { t: 'Old Manali riverside walk', n: 'Cafés and craft shops along the Beas.' },
-    { t: 'Hadimba Temple', n: 'Cedar-forest temple with 16th-century wooden architecture.' },
-    { t: 'Solang Valley', n: 'Paragliding, ropeway rides and mountain views.' },
-    { t: 'Vashisht hot springs', n: 'Natural sulphur springs above the village.' },
-    { t: 'Naggar Castle', n: 'Timber-and-stone castle with valley views.' },
-    { t: 'Local apple orchard visit', n: 'Seasonal fruit and mountain air.' },
-    { t: 'Mall Road evening stroll', n: 'Shops, snacks and street music.' },
-    { t: 'Jogini Falls short trek', n: 'An easy hike to a forest waterfall.' }
+    { t: 'Old Manali riverside walk', n: 'Cafés and craft shops along the Beas.', r: 4.5 },
+    { t: 'Hadimba Temple', n: 'Cedar-forest temple with 16th-century wooden architecture.', r: 4.6 },
+    { t: 'Solang Valley', n: 'Paragliding, ropeway rides and mountain views.', r: 4.3 },
+    { t: 'Vashisht hot springs', n: 'Natural sulphur springs above the village.', r: 4.0 },
+    { t: 'Naggar Castle', n: 'Timber-and-stone castle with valley views.', r: 4.4 },
+    { t: 'Local apple orchard visit', n: 'Seasonal fruit and mountain air.', r: 4.7 },
+    { t: 'Mall Road evening stroll', n: 'Shops, snacks and street music.', r: 4.2 },
+    { t: 'Jogini Falls short trek', n: 'An easy hike to a forest waterfall.', r: 4.8 }
   ],
   jaipur: [
-    { t: 'Amber Fort', n: 'Hilltop fort with mirrored halls and courtyards.' },
-    { t: 'Hawa Mahal photo stop', n: 'The five-storey pink sandstone façade.' },
-    { t: 'City Palace', n: 'Royal courtyards, museums and an armoury.' },
-    { t: 'Jantar Mantar', n: '18th-century astronomical instruments.' },
-    { t: 'Johari Bazaar shopping', n: 'Jewellery, textiles and lac bangles.' },
-    { t: 'Nahargarh Fort at sunset', n: 'Panoramic views over the pink city.' },
-    { t: 'Chokhi Dhani cultural evening', n: 'Folk dance, puppet shows and a Rajasthani thali.' },
-    { t: 'Jal Mahal viewpoint', n: 'A palace that appears to float on Man Sagar Lake.' }
+    { t: 'Amber Fort', n: 'Hilltop fort with mirrored halls and courtyards.', r: 4.8 },
+    { t: 'Hawa Mahal photo stop', n: 'The five-storey pink sandstone façade.', r: 4.5 },
+    { t: 'City Palace', n: 'Royal courtyards, museums and an armoury.', r: 4.6 },
+    { t: 'Jantar Mantar', n: '18th-century astronomical instruments.', r: 4.4 },
+    { t: 'Johari Bazaar shopping', n: 'Jewellery, textiles and lac bangles.', r: 4.3 },
+    { t: 'Nahargarh Fort at sunset', n: 'Panoramic views over the pink city.', r: 4.7 },
+    { t: 'Chokhi Dhani cultural evening', n: 'Folk dance, puppet shows and a Rajasthani thali.', r: 4.5 },
+    { t: 'Jal Mahal viewpoint', n: 'A palace that appears to float on Man Sagar Lake.', r: 4.6 }
   ],
   kerala: [
-    { t: 'Alleppey backwaters houseboat', n: 'A slow cruise through palm-lined canals.' },
-    { t: 'Munnar tea gardens', n: 'Rolling green hills and a tea museum.' },
-    { t: 'Fort Kochi heritage walk', n: 'Chinese fishing nets and colonial streets.' },
-    { t: 'Periyar Wildlife Sanctuary', n: 'Boat safari past elephants and bison.' },
-    { t: 'Kathakali performance', n: 'Traditional dance-drama with elaborate makeup.' },
-    { t: 'Mattancherry spice market', n: 'Cardamom, pepper and cloves by the sackful.' },
-    { t: 'Ayurvedic massage session', n: 'A traditional treatment to unwind.' },
-    { t: 'Varkala cliffside beach', n: 'Red cliffs above a quiet stretch of sand.' }
+    { t: 'Alleppey backwaters houseboat', n: 'A slow cruise through palm-lined canals.', r: 4.9 },
+    { t: 'Munnar tea gardens', n: 'Rolling green hills and a tea museum.', r: 4.8 },
+    { t: 'Fort Kochi heritage walk', n: 'Chinese fishing nets and colonial streets.', r: 4.5 },
+    { t: 'Periyar Wildlife Sanctuary', n: 'Boat safari past elephants and bison.', r: 4.3 },
+    { t: 'Kathakali performance', n: 'Traditional dance-drama with elaborate makeup.', r: 4.6 },
+    { t: 'Mattancherry spice market', n: 'Cardamom, pepper and cloves by the sackful.', r: 4.4 },
+    { t: 'Ayurvedic massage session', n: 'A traditional treatment to unwind.', r: 4.7 },
+    { t: 'Varkala cliffside beach', n: 'Red cliffs above a quiet stretch of sand.', r: 4.8 }
   ],
   udaipur: [
-    { t: 'City Palace complex', n: 'Lakefront palace with courtyards and museums.' },
-    { t: 'Lake Pichola boat ride', n: 'Views of floating palaces at dusk.' },
-    { t: 'Jagdish Temple', n: 'An ornately carved Indo-Aryan temple.' },
-    { t: 'Saheliyon ki Bari gardens', n: 'Fountains and marble kiosks.' },
-    { t: 'Bagore ki Haveli dance show', n: 'Rajasthani folk dance by the ghats.' },
-    { t: 'Old city bazaar walk', n: 'Miniature paintings and textiles.' }
+    { t: 'City Palace complex', n: 'Lakefront palace with courtyards and museums.', r: 4.7 },
+    { t: 'Lake Pichola boat ride', n: 'Views of floating palaces at dusk.', r: 4.8 },
+    { t: 'Jagdish Temple', n: 'An ornately carved Indo-Aryan temple.', r: 4.5 },
+    { t: 'Saheliyon ki Bari gardens', n: 'Fountains and marble kiosks.', r: 4.3 },
+    { t: 'Bagore ki Haveli dance show', n: 'Rajasthani folk dance by the ghats.', r: 4.6 },
+    { t: 'Old city bazaar walk', n: 'Miniature paintings and textiles.', r: 4.4 }
   ],
   rishikesh: [
-    { t: 'Laxman Jhula bridge walk', n: 'A suspension bridge over the Ganges.' },
-    { t: 'Triveni Ghat evening aarti', n: 'A riverside prayer ceremony with lamps.' },
-    { t: 'White-water rafting', n: 'Rapids on the Ganges through the foothills.' },
-    { t: 'Beatles Ashram', n: 'An abandoned ashram covered in murals.' },
-    { t: 'Sunrise yoga by the river', n: 'A class on the ghats as the town wakes up.' },
-    { t: 'Neer Garh Waterfall hike', n: 'A short trek to a forest waterfall.' }
+    { t: 'Laxman Jhula bridge walk', n: 'A suspension bridge over the Ganges.', r: 4.5 },
+    { t: 'Triveni Ghat evening aarti', n: 'A riverside prayer ceremony with lamps.', r: 4.8 },
+    { t: 'White-water rafting', n: 'Rapids on the Ganges through the foothills.', r: 4.7 },
+    { t: 'Beatles Ashram', n: 'An abandoned ashram covered in murals.', r: 4.3 },
+    { t: 'Sunrise yoga by the river', n: 'A class on the ghats as the town wakes up.', r: 4.9 },
+    { t: 'Neer Garh Waterfall hike', n: 'A short trek to a forest waterfall.', r: 4.6 }
   ]
 };
 
 function genericLandmarks(destination) {
   return [
-    ['Old town walking tour', 'Get oriented among the historic streets.'],
-    ['Local market visit', 'Fresh produce, spices and handicrafts.'],
-    ['Signature viewpoint', 'The spot everyone recommends for photos.'],
-    ['Regional food tasting', "A sampler of the area's best-known dishes."],
-    ['Museum or heritage site', 'A deeper look at local history.'],
-    ['Sunset by the water or hills', 'Wind down as the light changes.'],
-    ['Neighbourhood café crawl', 'Coffee, pastries and people-watching.'],
-    ['Evening cultural show', 'Music, dance or a local performance.']
-  ].map(([t, n]) => ({ t: `${t} in ${destination}`, n }));
+    ['Old town walking tour', 'Get oriented among the historic streets.', 4.4],
+    ['Local market visit', 'Fresh produce, spices and handicrafts.', 4.2],
+    ['Signature viewpoint', 'The spot everyone recommends for photos.', 4.7],
+    ['Regional food tasting', "A sampler of the area's best-known dishes.", 4.6],
+    ['Museum or heritage site', 'A deeper look at local history.', 4.3],
+    ['Sunset by the water or hills', 'Wind down as the light changes.', 4.8],
+    ['Neighbourhood café crawl', 'Coffee, pastries and people-watching.', 4.5],
+    ['Evening cultural show', 'Music, dance or a local performance.', 4.6]
+  ].map(([t, n, r]) => ({ t: `${t} in ${destination}`, n, r }));
 }
 
 const WEATHER = {
@@ -106,6 +93,7 @@ const KNOWN_DESTINATIONS = [
   { key: 'udaipur', names: ['udaipur'] },
   { key: 'rishikesh', names: ['rishikesh'] }
 ];
+
 const DISPLAY_NAMES = { goa: 'Goa', manali: 'Manali', jaipur: 'Jaipur', kerala: 'Kerala', udaipur: 'Udaipur', rishikesh: 'Rishikesh' };
 
 const PREFERENCE_PATTERNS = [
@@ -134,13 +122,12 @@ const ICONS = {
   cloud: '<svg viewBox="0 0 16 16"><path d="M4.5 12h7a2.7 2.7 0 000-5.4 3.6 3.6 0 00-6.9-1.2A3 3 0 004.5 12z"/></svg>',
   rain: '<svg viewBox="0 0 16 16"><path d="M4.5 9h7a2.7 2.7 0 000-5.4 3.6 3.6 0 00-6.9-1.2A3 3 0 004.5 9z"/><path d="M5 12l-1 2M8 12l-1 2M11 12l-1 2"/></svg>'
 };
+
 function weatherIcon(cond) {
   if (cond === 'cloudy') return ICONS.cloud;
   if (cond === 'rainy') return ICONS.rain;
   return ICONS.sun;
 }
-
-/* ---------------- State ---------------- */
 
 const STORAGE = { history: 'tm_history_v1', saved: 'tm_saved_v1' };
 
@@ -156,6 +143,7 @@ function persist(key) {
   try { localStorage.setItem(STORAGE[key], JSON.stringify(appState[key])); }
   catch (err) { console.warn('Could not save to localStorage', err); }
 }
+
 function loadPersisted() {
   try {
     appState.history = JSON.parse(localStorage.getItem(STORAGE.history)) || [];
@@ -166,19 +154,17 @@ function loadPersisted() {
   }
 }
 
-/* ---------------- Helpers ---------------- */
-
 function escapeHTML(str) {
   return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
+
 function cryptoId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
+
 function inr(n) {
   return n.toLocaleString('en-IN');
 }
-
-/* ---------------- Parsing user input into trip details ---------------- */
 
 function detectDestination(text) {
   const lower = text.toLowerCase();
@@ -224,7 +210,7 @@ function buildItinerary(details) {
     const stops = [];
     for (let s = 0; s < 4; s++) {
       const spot = landmarks[(d * 4 + s) % landmarks.length];
-      stops.push({ time: times[s], t: spot.t, n: spot.n });
+      stops.push({ time: times[s], t: spot.t, n: spot.n, r: spot.r });
     }
     schedule.push(stops);
   }
@@ -232,10 +218,14 @@ function buildItinerary(details) {
   const base = BUDGET_BASE[details.destinationKey] || BUDGET_BASE.default;
   const scaled = base * details.days * (1 + (details.travelers > 1 ? 0.35 * (details.travelers - 1) : 0));
   const budget = details.budgetOverride || Math.round(scaled / 10) * 10;
+  
+  const totalDistance = details.days * Math.floor(Math.random() * 30 + 40);
+  const totalFuel = (totalDistance / 15).toFixed(1);
 
   return {
     destination: details.destination, days: details.days, travelers: details.travelers,
-    budget, weather, tags: details.tags, schedule, activeDay: 0, expanded: false
+    budget, weather, tags: details.tags, schedule, activeDay: 0, expanded: false,
+    totalDistance, totalFuel
   };
 }
 
@@ -244,8 +234,6 @@ function generateReplyText(details) {
   const focus = tagPhrase ? `, keeping ${tagPhrase} in mind` : '';
   return `Here's a ${details.days}-day plan for ${details.destination}${focus}. I checked the weather and grouped nearby stops together to cut down on travel time.`;
 }
-
-/* ---------------- Rendering: chat ---------------- */
 
 const messagesEl = document.getElementById('messages');
 const emptyStateTemplate = document.getElementById('emptyState').cloneNode(true);
@@ -275,6 +263,9 @@ function itineraryCardHTML(msg) {
         </div>
         <span class="budget-pill">₹${inr(it.budget)}</span>
       </div>
+      <div style="padding: 12px 18px; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.1);">
+        📍 <strong>Map Format:</strong> View Route &nbsp;|&nbsp; 🛣️ <strong>Distance:</strong> ~${it.totalDistance} km &nbsp;|&nbsp; ⛽ <strong>Fuel:</strong> ~${it.totalFuel} L
+      </div>
       ${body}
       <div class="itinerary-foot">
         <button class="ghost-btn view-full">${it.expanded ? 'Show day by day' : 'View full itinerary'}</button>
@@ -285,8 +276,16 @@ function itineraryCardHTML(msg) {
       </div>
     </div>`;
 }
+
 function stopHTML(s) {
-  return `<li class="stop"><span class="stop-time">${s.time}</span><span class="stop-dot"></span><div class="stop-body"><h4>${s.t}</h4><p>${s.n}</p></div></li>`;
+  return `<li class="stop">
+    <span class="stop-time">${s.time}</span>
+    <span class="stop-dot"></span>
+    <div class="stop-body">
+      <h4>${s.t} <small>⭐ ${s.r}</small></h4>
+      <p>${s.n}</p>
+    </div>
+  </li>`;
 }
 
 function renderMessageNode(msg) {
@@ -306,13 +305,16 @@ function renderAllMessages() {
   }
   scrollToBottom();
 }
+
 function rerenderMessage(msg) {
   const node = messagesEl.querySelector(`.msg[data-id="${msg.id}"]`);
   if (node) node.replaceWith(renderMessageNode(msg));
 }
+
 function findMessage(id) {
   return appState.messages.find(m => String(m.id) === String(id));
 }
+
 function scrollToBottom() {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
@@ -325,12 +327,11 @@ function showTyping() {
   messagesEl.appendChild(node);
   scrollToBottom();
 }
+
 function hideTyping() {
   const node = document.getElementById('typingIndicator');
   if (node) node.remove();
 }
-
-/* ---------------- Rendering: trip summary panel ---------------- */
 
 const tripSummaryEl = document.getElementById('tripSummary');
 
@@ -371,7 +372,66 @@ function renderSavedListView() {
   });
 }
 
-/* ---------------- Rendering: history rail ---------------- */
+function renderExploreView() {
+  appState.rightViewMode = 'explore';
+  tripSummaryEl.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:6px;">Tap to generate a quick template:</p>
+      <button class="saved-list-item" onclick="document.getElementById('composerInput').value='Plan a 3 day trip to Goa'; document.getElementById('sendBtn').click();">
+        <strong>Goa</strong><span>Beaches, Sunsets, Seafood</span>
+      </button>
+      <button class="saved-list-item" onclick="document.getElementById('composerInput').value='Plan a 4 day heritage trip to Jaipur'; document.getElementById('sendBtn').click();">
+        <strong>Jaipur</strong><span>Palaces, Forts, Heritage</span>
+      </button>
+      <button class="saved-list-item" onclick="document.getElementById('composerInput').value='Plan a 5 day trek in Manali'; document.getElementById('sendBtn').click();">
+        <strong>Manali</strong><span>Mountains, Trekking, Snow</span>
+      </button>
+    </div>
+  `;
+}
+
+function renderPrefsView() {
+  appState.rightViewMode = 'prefs';
+  tripSummaryEl.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:12px; font-size:14.5px; padding:6px;">
+      
+      <div id="prefsList" style="display:flex; flex-direction:column; gap:12px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked> Highlight Budget Options</label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox"> Vegetarian Focus</label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" checked> Show Map Formats & Distances</label>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:8px; padding-top:12px; border-top:1px solid var(--border);">
+        <input type="text" id="newPrefInput" placeholder="e.g. Pet friendly..." style="flex:1; padding:8px 12px; border-radius:var(--radius-s); border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:13px; font-family:var(--font-display);">
+        <button id="addPrefBtn" style="background:var(--teal); color:#eafff6; padding:8px 14px; border-radius:var(--radius-s); font-family:var(--font-display); font-weight:600; font-size:13px; transition:background 0.15s;">Add</button>
+      </div>
+
+      <button class="ghost-btn" style="margin-top:14px; width:100%;" onclick="document.getElementById('newChatBtn').click();">Save preferences</button>
+    </div>
+  `;
+
+  // Make the "Add" button functionally append to the list above
+  document.getElementById('addPrefBtn').addEventListener('click', () => {
+    const input = document.getElementById('newPrefInput');
+    const val = input.value.trim();
+    if (val) {
+      const list = document.getElementById('prefsList');
+      const newLabel = document.createElement('label');
+      newLabel.style = "display:flex; align-items:center; gap:8px; cursor:pointer;";
+      newLabel.innerHTML = `<input type="checkbox" checked> ${escapeHTML(val)}`;
+      list.appendChild(newLabel);
+      input.value = '';
+    }
+  });
+
+  // Allow pressing "Enter" in the input field to trigger the Add button
+  document.getElementById('newPrefInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('addPrefBtn').click();
+    }
+  });
+}
 
 const historyListEl = document.getElementById('historyList');
 const historyEmptyEl = document.getElementById('historyEmpty');
@@ -397,11 +457,10 @@ function renderHistory() {
   });
 }
 
-/* ---------------- Saving trips ---------------- */
-
 function isTripSaved(it) {
   return appState.savedTrips.some(t => t.tripKey === it.tripKey);
 }
+
 function toggleSaveTrip(it) {
   const idx = appState.savedTrips.findIndex(t => t.tripKey === it.tripKey);
   if (idx > -1) appState.savedTrips.splice(idx, 1);
@@ -409,8 +468,6 @@ function toggleSaveTrip(it) {
   persist('saved');
   if (appState.rightViewMode === 'list') renderSavedListView();
 }
-
-/* ---------------- Sending a message ---------------- */
 
 function handleUserMessage(rawText) {
   const text = (rawText || '').trim();
@@ -432,37 +489,12 @@ function handleUserMessage(rawText) {
   }, 650 + Math.random() * 500);
 }
 
-/* ---------------- Toast ---------------- */
-
-function showToast(msg) {
-  let toast = document.getElementById('tmToast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'tmToast';
-    Object.assign(toast.style, {
-      position: 'fixed', left: '50%', bottom: '28px', transform: 'translateX(-50%) translateY(20px)',
-      background: '#262738', color: '#EAF3EE', border: '1px solid #34364a', padding: '10px 18px',
-      borderRadius: '10px', fontFamily: "'League Spartan', sans-serif", fontWeight: '500', fontSize: '13px',
-      opacity: '0', transition: 'opacity .2s, transform .2s', zIndex: '999', pointerEvents: 'none'
-    });
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  requestAnimationFrame(() => { toast.style.opacity = '1'; toast.style.transform = 'translateX(-50%) translateY(0)'; });
-  clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(20px)';
-  }, 2200);
-}
-
-/* ---------------- Mobile rails ---------------- */
-
 function openRail(side) {
   document.getElementById(side === 'left' ? 'railLeft' : 'railRight').classList.add('open');
   document.getElementById('scrim').classList.add('open');
   document.getElementById(side === 'left' ? 'leftToggle' : 'rightToggle').setAttribute('aria-expanded', 'true');
 }
+
 function closeMobileRails() {
   document.getElementById('railLeft').classList.remove('open');
   document.getElementById('railRight').classList.remove('open');
@@ -470,8 +502,6 @@ function closeMobileRails() {
   document.getElementById('leftToggle').setAttribute('aria-expanded', 'false');
   document.getElementById('rightToggle').setAttribute('aria-expanded', 'false');
 }
-
-/* ---------------- Event wiring ---------------- */
 
 const composerForm = document.getElementById('composerForm');
 const composerInput = document.getElementById('composerInput');
@@ -483,12 +513,14 @@ composerForm.addEventListener('submit', e => {
   composerInput.style.height = 'auto';
   handleUserMessage(val);
 });
+
 composerInput.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     composerForm.requestSubmit();
   }
 });
+
 composerInput.addEventListener('input', () => {
   composerInput.style.height = 'auto';
   composerInput.style.height = Math.min(composerInput.scrollHeight, 140) + 'px';
@@ -538,6 +570,14 @@ document.getElementById('newChatBtn').addEventListener('click', () => {
   closeMobileRails();
 });
 
+const brandIcon = document.querySelector('.brand');
+if (brandIcon) {
+  brandIcon.style.cursor = 'pointer';
+  brandIcon.addEventListener('click', () => {
+    document.getElementById('newChatBtn').click();
+  });
+}
+
 document.querySelectorAll('[data-view]').forEach(el => {
   el.addEventListener('click', () => {
     const view = el.dataset.view;
@@ -549,9 +589,11 @@ document.querySelectorAll('[data-view]').forEach(el => {
       renderSavedListView();
       if (window.innerWidth <= 940) openRail('right');
     } else if (view === 'explore') {
-      showToast('Explore is coming soon.');
+      renderExploreView();
+      if (window.innerWidth <= 940) openRail('right');
     } else if (view === 'prefs') {
-      showToast('Preferences are coming soon.');
+      renderPrefsView();
+      if (window.innerWidth <= 940) openRail('right');
     }
   });
 });
@@ -559,8 +601,6 @@ document.querySelectorAll('[data-view]').forEach(el => {
 document.getElementById('leftToggle').addEventListener('click', () => openRail('left'));
 document.getElementById('rightToggle').addEventListener('click', () => openRail('right'));
 document.getElementById('scrim').addEventListener('click', closeMobileRails);
-
-/* ---------------- Init ---------------- */
 
 loadPersisted();
 renderHistory();
