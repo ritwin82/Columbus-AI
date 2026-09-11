@@ -606,3 +606,18 @@ loadPersisted();
 renderHistory();
 renderAllMessages();
 renderTripSummary(null);
+const profileAvatar = document.getElementById('profileAvatar');
+const profileDropdown = document.getElementById('profileDropdown');
+
+if (profileAvatar && profileDropdown) {
+  profileAvatar.addEventListener('click', (e) => {
+    e.stopPropagation();
+    profileDropdown.classList.toggle('open');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!profileAvatar.contains(e.target) && !profileDropdown.contains(e.target)) {
+      profileDropdown.classList.remove('open');
+    }
+  });
+}

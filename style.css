@@ -685,3 +685,51 @@ svg {
   .composer { margin: 8px 14px 14px; }
   .empty-state h1 { font-size: 26px; }
 }
+.avatar-container {
+  position: relative;
+}
+
+.avatar {
+  cursor: pointer;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  width: 160px;
+  display: none;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 100;
+}
+
+.profile-dropdown.open {
+  display: flex;
+}
+
+.dropdown-header {
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-display);
+}
+
+.dropdown-item {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 13.5px;
+  color: var(--text);
+  background: transparent;
+  width: 100%;
+  transition: background 0.15s;
+}
+
+.dropdown-item:hover {
+  background: var(--surface-raised);
+}

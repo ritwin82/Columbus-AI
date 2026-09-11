@@ -39,7 +39,14 @@
       <button class="icon-btn only-mobile" id="rightToggle" aria-label="Open trip summary" aria-expanded="false">
         <svg viewBox="0 0 20 20"><path d="M4 4h12v12H4z"/><path d="M4 8h12"/></svg>
       </button>
-      <div class="avatar" title="Traveler">T</div>
+      <div class="avatar-container">
+        <div class="avatar" id="profileAvatar" title="Traveler">T</div>
+        <div class="profile-dropdown" id="profileDropdown">
+          <div class="dropdown-header">Not signed in</div>
+          <button class="dropdown-item">Log in</button>
+          <button class="dropdown-item">Sign up</button>
+        </div>
+      </div>
     </div>
   </header>
 
