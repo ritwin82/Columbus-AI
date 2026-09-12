@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Epilogue:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -25,8 +26,8 @@
       </div>
 
       <div class="widget widget-map neo-panel" id="widgetMap">
-        <div class="widget-header">📍 Location</div>
-        <div class="widget-body map-placeholder" id="mapContent" onclick="requestLocation()">
+        <div class="widget-header">📍 Trip overview</div>
+        <div class="widget-body map-placeholder" id="mapContent">
           <div class="map-initial">
             <span style="font-size: 50px;">🗺️</span>
             <br>
@@ -124,6 +125,30 @@
 
           <div class="budget-panel neo-panel-inner" id="budgetPanel"></div>
 
+          <section class="ai-summary neo-panel-inner" aria-labelledby="aiSummaryTitle">
+            <div class="section-label" id="aiSummaryTitle">✦ COLUMBUS AI</div>
+            <p id="aiSummaryText"></p>
+          </section>
+
+          <section class="route-panel neo-panel-inner" aria-labelledby="routeMapTitle">
+            <div class="route-panel-head">
+              <div>
+                <div class="section-label">YOUR ROUTE</div>
+                <h2 id="routeMapTitle">Day-by-day map</h2>
+              </div>
+              <div id="mapDayTabs" class="map-day-tabs" role="tablist"></div>
+            </div>
+            <div id="itineraryMap" class="itinerary-map" aria-label="Map of itinerary stops"></div>
+            <div id="routeTotals" class="route-totals" aria-live="polite"></div>
+          </section>
+
+          <section class="knowledge-panel neo-panel-inner">
+            <button class="knowledge-toggle" id="knowledgeToggle" type="button" aria-expanded="false" onclick="toggleKnowledgeGraph()">
+              <span>◎ View knowledge graph output</span><span id="knowledgeArrow">↓</span>
+            </button>
+            <div id="knowledgeGraph" class="knowledge-graph hidden"></div>
+          </section>
+
           <div id="replanAlert" class="replan-alert neo-panel-inner hidden"></div>
 
           <div class="days-container" id="daysContainer"></div>
@@ -172,6 +197,7 @@
     </div>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="app.js"></script>
 </body>
 </html>

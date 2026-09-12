@@ -366,6 +366,30 @@ h1, h2, h3 { font-family: var(--font-display); }
 .back-btn { display: block; margin-bottom: 6px; font-size: 14px; }
 
 .budget-panel { padding: 18px 20px; margin-bottom: 24px; }
+.section-label { font-family: var(--font-display); font-weight: 700; font-size: 12px; letter-spacing: .12em; color: var(--primary); margin-bottom: 6px; }
+.ai-summary { padding: 18px 20px; margin-bottom: 24px; background: #fff9dc; }
+.ai-summary p { line-height: 1.7; }
+.route-panel { padding: 20px; margin-bottom: 24px; }
+.route-panel-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.route-panel-head h2 { font-size: 24px; }
+.map-day-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.map-day-tab { border: 2px solid var(--black); background: white; border-radius: 999px; padding: 7px 13px; font-family: var(--font-display); font-weight: 700; cursor: pointer; }
+.map-day-tab.active { background: var(--accent-blue); box-shadow: 3px 3px 0 var(--black); }
+.itinerary-map { height: 360px; border: var(--border-thick); border-radius: var(--radius-md); overflow: hidden; background: #e8f4f8; z-index: 0; }
+.route-totals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+.route-totals span { border: 2px solid var(--black); border-radius: var(--radius-sm); padding: 12px; background: #f7f7f7; text-align: center; font-size: 13px; }
+.route-totals strong { display: block; font-family: var(--font-display); font-size: 18px; margin-bottom: 3px; }
+.knowledge-panel { margin-bottom: 24px; overflow: hidden; }
+.knowledge-toggle { width: 100%; border: 0; background: var(--black); color: white; padding: 15px 18px; display: flex; justify-content: space-between; font-family: var(--font-display); font-weight: 700; font-size: 15px; cursor: pointer; }
+.knowledge-graph { padding: 20px; }
+.knowledge-graph.hidden { display: none; }
+.graph-canvas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 22px; min-height: 260px; padding: 30px; border: 2px dashed var(--black); border-radius: var(--radius-md); background: #eefaf8; }
+.graph-hub, .graph-node { border: 2px solid var(--black); box-shadow: 3px 3px 0 var(--black); font-family: var(--font-display); font-weight: 700; text-align: center; }
+.graph-hub { background: var(--primary); color: white; border-radius: 50%; width: 110px; height: 110px; display: grid; place-items: center; }
+.graph-node { width: 150px; padding: 10px; border-radius: 10px; background: white; font-size: 12px; position: relative; }
+.graph-node::before { content: '→'; position: absolute; left: -17px; color: var(--primary); }
+.graph-node small { display: block; color: var(--text-muted); font-family: var(--font-body); font-weight: 400; margin-top: 4px; }
+.graph-legend { color: var(--text-muted); font-size: 13px; margin-top: 12px; }
 .budget-top { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-display); font-size: 18px; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
 .budget-status { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: #E6F9E6; border: 2px solid var(--black); }
 .budget-status.over { background: #FFE0E0; color: #D32F2F; }

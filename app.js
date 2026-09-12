@@ -31,6 +31,24 @@ let prefs = loadJSON(STORE.PREFS, DEFAULT_PREFS);
 const ACCOMMODATION_RATES = { budget: 800, mid: 1800, luxury: 4500 };
 const INTEREST_OPTIONS = ['beaches', 'culture', 'nature', 'food', 'adventure'];
 const DEFAULT_WEATHER = { icon: '☀️', temp: '28°C', desc: 'Perfect beach weather.' };
+const API_BASE = window.COLUMBUS_API_BASE || 'http://localhost:8000/api/v1';
+const PLACE_COORDS = {
+  'Basilica of Bom Jesus': [15.5009, 73.9116],
+  'Old Goa Exploration': [15.4989, 73.8278],
+  'Vegetarian Lunch at Navtara': [15.4909, 73.8278],
+  'Quiet Beach — Ashwem': [15.6592, 73.7196],
+  'Solang Valley Trek': [32.3161, 77.1570],
+  'Vegetarian Himachali Thali': [32.2432, 77.1892],
+  'Hidimba Devi Temple': [32.2420, 77.1777],
+  'Amber Fort': [26.9855, 75.8513],
+  'Vegetarian Rajasthani Thali': [26.9124, 75.7873],
+  'City Palace': [26.9258, 75.8237],
+  'Local Heritage Walk': [13.0827, 80.2707],
+  'Vegetarian Local Thali': [13.0674, 80.2376]
+};
+const WEATHER_ICON = { clear: '☀️', clouds: '☁️', rain: '🌧️', drizzle: '🌦️', thunderstorm: '⛈️', snow: '❄️', mist: '🌫️', haze: '🌫️' };
+let itineraryMap = null;
+let itineraryMapLayer = null;
 
 let state = {
   currentTrip: null,
@@ -275,10 +293,27 @@ function generateItinerary(params) {
   };
 }
 
-function getWeather(destKey) {
-  return new Promise(resolve => {
-    setTimeout(() => resolve((DESTINATIONS[destKey] || DESTINATIONS.default).weather), 200);
-  });
+async function getWeather(destKey) {
+  const fallback = (DESTINATIONS[destKey] || DESTINATIONS.default).weather;
+  const first = (DESTINATIONS[destKey] || DESTINATIONS.default).pool[0];
+  const coords = first ? PLACE_COORDS[first.title] : null;
+  if (!coords) return fallback;
+  try {
+    const response = await fetch(`${API_BASE}/weather?latitude=${coords[0]}&longitude=${coords[1]}`);
+    if (!response.ok) throw new Error('Weather service unavailable');
+    const forecast = await response.json();
+    if (!forecast.length) return fallback;
+    const current = forecast[0];
+    const condition = String(current.condition || '').toLowerCase();
+    return {
+      icon: WEATHER_ICON[condition] || '🌤️',
+      temp: `${Math.round(current.temperature_c)}°C`,
+      desc: `${condition.charAt(0).toUpperCase() + condition.slice(1)} · ${Math.round((current.rain_probability || 0) * 100)}% rain · OpenWeather`,
+      source: current.source
+    };
+  } catch (error) {
+    return { ...fallback, desc: `${fallback.desc} Demo forecast — start the API for live OpenWeather.` };
+  }
 }
 function getPlaces(destKey) {
   return new Promise(resolve => {
@@ -323,9 +358,10 @@ document.getElementById('tripForm').addEventListener('submit', (e) => {
   planBtn.textContent = 'PLANNING...';
   showView('viewLoading');
   const params = buildTripParams(value);
-  Promise.all([getWeather(params.destKey), getPlaces(params.destKey)]).then(() => {
+  Promise.all([getWeather(params.destKey), getPlaces(params.destKey)]).then(([weather]) => {
     runLoadingSequence(() => {
       const trip = generateItinerary(params);
+      trip.weather = weather;
       trip.id = 'trip_' + params.destKey + '_' + Date.now();
       addToMyTrips(trip);
       displayItinerary(trip, { returnView: 'viewHome' });
@@ -342,11 +378,86 @@ function displayItinerary(trip, opts) {
   document.getElementById('itineraryTitle').textContent = trip.destLabel + ' — ' + trip.days + ' DAYS';
   document.getElementById('itineraryTags').textContent = buildTagsText(trip);
   document.getElementById('replanAlert').classList.add('hidden');
+  document.getElementById('aiSummaryText').textContent = buildAiSummary(trip);
   renderDays(trip);
   renderBudget(trip);
+  renderMapTabs(trip);
+  renderKnowledgeGraph(trip);
   updateWeatherWidget(trip.weather);
   updateSaveBtnState();
   showView('viewItinerary');
+}
+
+function buildAiSummary(trip) {
+  const stopCount = trip.itinerary.reduce((sum, day) => sum + day.activities.length, 0);
+  return `I’ve planned a ${trip.days}-day ${trip.destLabel.toLowerCase()} escape with ${stopCount} thoughtfully sequenced stops, balancing ${trip.pace} days, ${trip.vegetarian ? 'vegetarian-friendly food' : 'flexible dining'}, ${trip.lowCrowds ? 'quieter experiences' : 'the essential highlights'}, and your ₹${trip.budget.toLocaleString('en-IN')} budget; use the day maps to follow each route and open the knowledge graph to see why the places belong together.`;
+}
+
+function activityCoords(activity) {
+  return activity.coordinates || PLACE_COORDS[activity.title] || null;
+}
+
+function haversineKm(left, right) {
+  const toRad = value => value * Math.PI / 180;
+  const dLat = toRad(right[0] - left[0]);
+  const dLon = toRad(right[1] - left[1]);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(left[0])) * Math.cos(toRad(right[0])) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function routeMetrics(activities) {
+  const points = activities.map(activityCoords).filter(Boolean);
+  let distance = 0;
+  for (let index = 1; index < points.length; index++) distance += haversineKm(points[index - 1], points[index]);
+  return { distance, minutes: Math.round(distance / 28 * 60) };
+}
+
+function renderMapTabs(trip) {
+  document.getElementById('mapDayTabs').innerHTML = trip.itinerary.map((day, index) =>
+    `<button type="button" class="map-day-tab ${index === 0 ? 'active' : ''}" onclick="selectMapDay(${index}, this)" role="tab">Day ${index + 1}</button>`
+  ).join('');
+  setTimeout(() => selectMapDay(0, document.querySelector('.map-day-tab')), 0);
+}
+
+function selectMapDay(dayIndex, button) {
+  if (!state.currentTrip || !window.L) return;
+  document.querySelectorAll('.map-day-tab').forEach(tab => tab.classList.toggle('active', tab === button));
+  const day = state.currentTrip.itinerary[dayIndex];
+  const located = day.activities.map(activity => ({ activity, coords: activityCoords(activity) })).filter(item => item.coords);
+  if (!itineraryMap) {
+    itineraryMap = L.map('itineraryMap', { scrollWheelZoom: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
+    }).addTo(itineraryMap);
+  }
+  if (itineraryMapLayer) itineraryMapLayer.remove();
+  itineraryMapLayer = L.layerGroup().addTo(itineraryMap);
+  located.forEach((item, index) => L.marker(item.coords).bindPopup(`<strong>${index + 1}. ${item.activity.title}</strong><br>${item.activity.time}`).addTo(itineraryMapLayer));
+  const points = located.map(item => item.coords);
+  if (points.length > 1) L.polyline(points, { color: '#ff6b6b', weight: 5, dashArray: '9 8' }).addTo(itineraryMapLayer);
+  if (points.length) itineraryMap.fitBounds(L.latLngBounds(points).pad(0.25));
+  else itineraryMap.setView([20.5937, 78.9629], 4);
+  setTimeout(() => itineraryMap.invalidateSize(), 50);
+  const metrics = routeMetrics(day.activities);
+  document.getElementById('routeTotals').innerHTML = `<span><strong>${metrics.distance.toFixed(1)} km</strong> total distance</span><span><strong>${formatDuration(metrics.minutes)}</strong> estimated travel time</span><span>${located.length} mapped stops</span>`;
+  document.getElementById('mapContent').innerHTML = `<div class="map-initial"><span style="font-size:42px">🗺️</span><strong>Day ${dayIndex + 1}</strong><small>${located.length} stops · ${metrics.distance.toFixed(1)} km</small></div>`;
+}
+
+function formatDuration(minutes) {
+  if (minutes < 60) return `${minutes} min`;
+  return `${Math.floor(minutes / 60)} hr ${minutes % 60} min`;
+}
+
+function renderKnowledgeGraph(trip) {
+  const nodes = trip.itinerary.flatMap((day, dayIndex) => day.activities.map(activity => ({ ...activity, dayIndex })));
+  document.getElementById('knowledgeGraph').innerHTML = `<div class="graph-canvas"><div class="graph-hub">${trip.destLabel}</div>${nodes.map((node, index) => `<div class="graph-node" style="--node-index:${index};--node-count:${Math.max(nodes.length, 1)}"><span>${node.title}</span><small>Day ${node.dayIndex + 1} · ${node.category}</small></div>`).join('')}</div><p class="graph-legend">Relationships show how destination, day, activity type, and preferences informed this itinerary.</p>`;
+}
+
+function toggleKnowledgeGraph() {
+  const graph = document.getElementById('knowledgeGraph');
+  const expanded = graph.classList.toggle('hidden') === false;
+  document.getElementById('knowledgeToggle').setAttribute('aria-expanded', String(expanded));
+  document.getElementById('knowledgeArrow').textContent = expanded ? '↑' : '↓';
 }
 
 function buildTagsText(trip) {
