@@ -1,0 +1,48 @@
+{
+  "restaurants": [
+    {"id":"rest-chn-001","name":"Saravana Bhavan (Mylapore / Egmore)","destination":"Chennai","area":"Mylapore / Citywide","cuisines":["South Indian"],"dietary":["Vegetarian"],"average_cost_for_two_inr":400},
+    {"id":"rest-chn-002","name":"Murugan Idli Shop","destination":"Chennai","area":"T. Nagar / Besant Nagar","cuisines":["South Indian"],"dietary":["Vegetarian"],"average_cost_for_two_inr":350},
+    {"id":"rest-chn-003","name":"Rayar's Mess","destination":"Chennai","area":"Mylapore","cuisines":["South Indian"],"dietary":["Vegetarian"],"average_cost_for_two_inr":200},
+    {"id":"rest-chn-004","name":"Anjappar Chettinad Restaurant","destination":"Chennai","area":"Nungambakkam / T. Nagar","cuisines":["Chettinad"],"dietary":["Non-Vegetarian"],"average_cost_for_two_inr":900},
+    {"id":"rest-chn-005","name":"Yaa Mohideen Biryani","destination":"Chennai","area":"Pallavaram / Anna Nagar","cuisines":["Biryani"],"dietary":["Non-Vegetarian"],"average_cost_for_two_inr":650},
+    {"id":"rest-chn-006","name":"Velu Military Hotel","destination":"Chennai","area":"T. Nagar","cuisines":["Tamil"],"dietary":["Non-Vegetarian"],"average_cost_for_two_inr":600},
+    {"id":"rest-chn-007","name":"Palmshore Seafood Restaurant","destination":"Chennai","area":"Santhome / ECR","cuisines":["Seafood"],"dietary":["Non-Vegetarian"],"average_cost_for_two_inr":1200},
+    {"id":"rest-mam-001","name":"Moonrakers Restaurant","destination":"Mamallapuram","area":"Othavadai Street","cuisines":["Seafood","Multi-Cuisine"],"dietary":["Vegetarian Options","Non-Vegetarian"],"average_cost_for_two_inr":1000},
+    {"id":"rest-mam-002","name":"Santana Beach Restaurant","destination":"Mamallapuram","area":"Othavadai Street","cuisines":["Seafood"],"dietary":["Non-Vegetarian"],"average_cost_for_two_inr":1100},
+    {"id":"rest-mam-003","name":"The Wharf 2.0","destination":"Mamallapuram","area":"East Raja Street","cuisines":["Seafood","International"],"dietary":["Vegetarian Options","Non-Vegetarian"],"average_cost_for_two_inr":3500},
+    {"id":"rest-mam-004","name":"Mamalla Bhavan","destination":"Mamallapuram","area":"East Raja Street","cuisines":["South Indian"],"dietary":["Vegetarian"],"average_cost_for_two_inr":350},
+    {"id":"rest-mam-005","name":"Hotel Guru","destination":"Mamallapuram","area":"Town Centre","cuisines":["Chettinad"],"dietary":["Vegetarian Options","Non-Vegetarian"],"average_cost_for_two_inr":500},
+    {"id":"rest-mam-006","name":"Le Yogi Restaurant & Cafe","destination":"Mamallapuram","area":"Fisherman Colony","cuisines":["Multi-Cuisine"],"dietary":["Vegetarian Options","Non-Vegetarian"],"average_cost_for_two_inr":800},
+    {"id":"rest-pud-001","name":"Cafe des Arts","destination":"Puducherry","area":"White Town","cuisines":["French Cafe"],"dietary":["Vegetarian Options"],"average_cost_for_two_inr":750},
+    {"id":"rest-pud-002","name":"Coromandel Cafe","destination":"Puducherry","area":"White Town","cuisines":["French-Inspired"],"dietary":["Vegetarian Options","Non-Vegetarian"],"average_cost_for_two_inr":1800},
+    {"id":"rest-pud-003","name":"Baker Street","destination":"Puducherry","area":"Bussy Street","cuisines":["French Bakery"],"dietary":["Vegetarian Options"],"average_cost_for_two_inr":600},
+    {"id":"rest-pud-004","name":"La Villa Restaurant","destination":"Puducherry","area":"White Town","cuisines":["Creole","Seafood"],"dietary":["Vegetarian Options","Non-Vegetarian"],"average_cost_for_two_inr":3000},
+    {"id":"rest-pud-005","name":"Chez Pushpa","destination":"Puducherry","area":"Ariyankuppam","cuisines":["Creole"],"dietary":["Non-Vegetarian"],"average_cost_for_two_inr":2200},
+    {"id":"rest-pud-006","name":"Surguru Spot","destination":"Puducherry","area":"Heritage Town","cuisines":["South Indian"],"dietary":["Vegetarian"],"average_cost_for_two_inr":400},
+    {"id":"rest-pud-007","name":"Tanto Pizzeria Auroville","destination":"Puducherry","area":"Auroville Main Road","cuisines":["Italian"],"dietary":["Vegetarian Options"],"average_cost_for_two_inr":1100}
+  ],
+  "festivals": [
+    {"id":"EVT_MAM_DANCE_01","name":"Mamallapuram Indian Dance Festival","destination":"Mamallapuram","months":["December","January"],"tags":["Bharatanatyam","Classical Dance","Heritage"]},
+    {"id":"EVT_PUD_YOGA_01","name":"International Yoga Festival","destination":"Puducherry","months":["January"],"tags":["Yoga","Wellness","Spiritual"]},
+    {"id":"EVT_CHE_MUSIC_01","name":"Madras Music Season","destination":"Chennai","months":["December","January"],"tags":["Carnatic Music","Cultural Heritage"]}
+  ],
+  "transport_stops": [
+    {"id":"stop-chn-central","name":"Chennai Central Railway Station","destination":"Chennai","modes":["Rail"]},
+    {"id":"stop-chn-airport","name":"Chennai International Airport","destination":"Chennai","modes":["Air"]},
+    {"id":"stop-chn-cmbt","name":"Chennai CMBT Bus Stand","destination":"Chennai","modes":["Bus"]},
+    {"id":"stop-mam-cgl","name":"Chengalpattu Junction","destination":"Mamallapuram","modes":["Rail","Road"]},
+    {"id":"stop-pud-airport","name":"Puducherry Airport","destination":"Puducherry","modes":["Air"]},
+    {"id":"stop-pud-railway","name":"Puducherry Railway Station","destination":"Puducherry","modes":["Rail"]},
+    {"id":"stop-pud-bus","name":"Puducherry Bus Stand","destination":"Puducherry","modes":["Bus"]}
+  ],
+  "attraction_accessibility": {
+    "TN_CHE_002":["Wheelchair","Senior Traveller"],
+    "TN_CHE_003":["Wheelchair","Senior Traveller"],
+    "TN_CHE_004":["Senior Traveller"],
+    "TN_MAM_001":["Senior Traveller"],
+    "PY_PUD_001":["Wheelchair","Senior Traveller"],
+    "PY_PUD_002":["Wheelchair","Senior Traveller"],
+    "PY_PUD_004":["Wheelchair","Senior Traveller"]
+  },
+  "proximity_basis": "destination-level prototype proximity; verify actual distance before travel"
+}

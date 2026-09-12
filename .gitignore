@@ -1,0 +1,45 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# JavaScript
+node_modules/
+.next/
+coverage/
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime and generated data
+logs/
+tmp/
+data/raw/*
+data/processed/*
+data/chunks/*
+data/exports/*
+!data/**/.gitkeep
+# Small normalized demo datasets required for a working clone
+!data/processed/demo_places.json
+!data/processed/places.json
+!data/processed/hotels.json
+!data/processed/graph_entities.json
+!data/chunks/chunks.jsonl
+models/weights/*
+!models/weights/.gitkeep

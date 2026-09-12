@@ -1,0 +1,27 @@
+planner:
+  provider: ollama
+  model: gemma3:12b
+  role: itinerary_generation_and_reflection
+
+task_slm:
+  provider: ollama
+  model: gemma3:4b
+  role: extraction_classification_summarization
+
+chat_fallback:
+  provider: ollama
+  model: qwen2.5-coder:3b
+  role: temporary_fallback_when_configured_gemma_models_are_unavailable
+
+embedding:
+  provider: ollama
+  model: bge-m3
+
+embedding_fallback:
+  provider: ollama
+  model: all-minilm
+  role: lightweight_fallback_when_bge_m3_is_unavailable
+
+reranker:
+  provider: sentence_transformers
+  model: BAAI/bge-reranker-v2-m3

@@ -1,0 +1,320 @@
+[
+  {
+    "id": "TN_CHE_001",
+    "name": "Kapaleeswarar Temple",
+    "destination": "Chennai",
+    "categories": [
+      "religious",
+      "heritage"
+    ],
+    "description": "7th-century Dravidian temple dedicated to Lord Shiva in Mylapore.",
+    "latitude": 13.0337,
+    "longitude": 80.2697,
+    "visit_minutes": 90,
+    "estimated_cost_inr": "0",
+    "opening_time": "05:00:00",
+    "closing_time": "21:00:00",
+    "indoor": false,
+    "dietary": [],
+    "accessibility": [],
+    "crowd_level": 5,
+    "citations": [
+      {
+        "title": "User-provided RAG dataset; verify before travel",
+        "publisher": "User-provided dataset",
+        "source_url": null,
+        "retrieved_at": "2026-09-12T05:03:33.282912Z",
+        "last_verified_at": null,
+        "reliability": 0.4,
+        "is_live": false
+      }
+    ],
+    "live_status": "unverified"
+  },
+  {
+    "id": "TN_CHE_002",
+    "name": "Marina Beach & Promenade",
+    "destination": "Chennai",
+    "categories": [
+      "beach",
+      "public space"
+    ],
+    "description": "Longest natural urban beach in India running along the Bay of Bengal.",
+    "latitude": 13.0499,
+    "longitude": 80.2824,
+    "visit_minutes": 120,
+    "estimated_cost_inr": "0",
+    "opening_time": "00:00:00",
+    "closing_time": "23:59:00",
+    "indoor": false,
+    "dietary": [],
+    "accessibility": [],
+    "crowd_level": 5,
+    "citations": [
+      {
+        "title": "User-provided RAG dataset; verify before travel",
+        "publisher": "User-provided dataset",
+        "source_url": null,
+        "retrieved_at": "2026-09-12T05:03:33.282912Z",
+        "last_verified_at": null,
+        "reliability": 0.4,
+        "is_live": false
+      }
+    ],
+    "live_status": "unverified"
+  },
+  {
+    "id": "TN_CHE_003",
+    "name": "Government Museum Chennai",
+    "destination": "Chennai",
+    "categories": [
+      "museum",
+      "heritage"
+    ],
+    "description": "Second oldest museum in India, famous for its Chola Bronze gallery.",
+    "latitude": 13.07,
+    "longitude": 80.2566,
+    "visit_minutes": 150,
+    "estimated_cost_inr": "15",
+    "opening_time": "09:30:00",
+    "closing_time": "17:00:00",
+    "indoor": true,
+    "dietary": [],
+    "accessibility": [],
+    "crowd_level": 5,
+    "citations": [
+      {
+        "title": "User-provided RAG dataset; verify before travel",
+        "publisher": "User-provided dataset",
+        "source_url": null,
+        "retrieved_at": "2026-09-12T05:03:33.282912Z",
+        "last_verified_at": null,
+        "reliability": 0.4,
+        "is_live": false
+      }
+    ],
+    "live_status": "unverified"
+  },
+  {
+    "id": "TN_CHE_004",
+    "name": "Fort St. George & Museum",
+    "destination": "Chennai",
+    "categories": [
+      "colonial heritage",
+      "historic"
+    ],
+    "description": "First British fortress in India built in 1639, housing colonial artifacts.",
+    "latitude": 13.0796,
+    "longitude": 80.2875,
+    "visit_minutes": 120,
+    "estimated_cost_inr": "25",
+    "opening_time": "09:00:00",
+    "closing_time": "17:00:00",
+    "indoor": false,
+    "dietary": [],
+    "accessibility": [],
+    "crowd_level": 5,
+    "citations": [
+      {
+        "title": "User-provided RAG dataset; verify before travel",
+        "publisher": "User-provided dataset",
+        "source_url": null,
+        "retrieved_at": "2026-09-12T05:03:33.282912Z",
+        "last_verified_at": null,
+        "reliability": 0.4,
+        "is_live": false
+      }
+    ],
+    "live_status": "unverified"
+  },
+  {
+    "id": "TN_MAM_001",
+    "name": "Shore Temple",
+    "destination": "Mamallapuram",
+    "categories": [
+      "unesco heritage"
+    ],
+    "description": "Built in the 8th century AD during the Pallava reign, overlooking the Bay of Bengal.",
+    "latitude": 12.6169,
+    "longitude": 80.1992,
+    "visit_minutes": 90,
+    "estimated_cost_inr": "40",
+    "opening_time": "06:00:00",
+    "closing_time": "18:00:00",
+    "indoor": false,
+    "dietary": [],
+    "accessibility": [],
+    "crowd_level": 5,
+    "citations": [
+      {
+        "title": "User-provided RAG dataset; verify before travel",
+        "publisher": "User-provided dataset",
+        "source_url": null,
+        "retrieved_at": "2026-09-12T05:03:33.282912Z",
+        "last_verified_at": null,
+        "reliability": 0.4,
+        "is_live": false
+      }
+    ],
+    "live_status": "unverified"
+  },
+  {
+    "id": "TN_MAM_002",
+    "name": "Pancha Rathas",
+    "destination": "Mamallapuram",
+    "categories": [
+      "unesco heritage"
+    ],
+    "description": "Monolithic rock-cut temples named after the Pandavas and Draupadi.",
+    "latitude": 12.6118,
+    "longitude": 80.1927,
+    "visit_minutes": 60,
+    "estimated_cost_inr": "40",
+    "opening_time": "06:00:00",
+    "closing_time": "18:00:00",
+    "indoor": false,
+    "dietary": [],
+    "accessibility": [],
+    "crowd_level": 5,
+    "citations": [
+      {
+        "title": "User-provided RAG dataset; verify before travel",
+        "publisher": "User-provided dataset",
+        "source_url": null,
+        "retrieved_at": "2026-09-12T05:03:33.282912Z",
+        "last_verified_at": null,
+        "reliability": 0.4,
+        "is_live": false
+      }
+    ],
+    "live_status": "unverified"
+  },
+  {
+    "id": "PY_PUD_001",
+    "name": "Promenade Beach (Rock Beach)",
+    "destination": "Puducherry",
+    "categories": [
+      "beach",
+      "promenade"
+    ],
+    "description": "Iconic seafront promenade running along White Town, pedestrianized during evenings.",
+    "latitude": 11.934,
+    "longitude": 79.8351,
+    "visit_minutes": 120,
+    "estimated_cost_inr": "0",
+    "opening_time": "00:00:00",
+    "closing_time": "23:59:00",
+    "indoor": false,
+    "dietary": [],
+    "accessibility": [],
+    "crowd_level": 5,
+    "citations": [
+      {
+        "title": "User-provided RAG dataset; verify before travel",
+        "publisher": "User-provided dataset",
+        "source_url": null,
+        "retrieved_at": "2026-09-12T05:03:33.282912Z",
+        "last_verified_at": null,
+        "reliability": 0.4,
+        "is_live": false
+      }
+    ],
+    "live_status": "unverified"
+  },
+  {
+    "id": "PY_PUD_002",
+    "name": "Matrimandir & Visitor Centre (Auroville)",
+    "destination": "Puducherry",
+    "categories": [
+      "spiritual",
+      "architectural"
+    ],
+    "description": "Golden geodesic dome for silent meditation in the universal city of Auroville.",
+    "latitude": 11.98,
+    "longitude": 79.8118,
+    "visit_minutes": 180,
+    "estimated_cost_inr": "0",
+    "opening_time": "09:00:00",
+    "closing_time": "17:30:00",
+    "indoor": false,
+    "dietary": [],
+    "accessibility": [],
+    "crowd_level": 5,
+    "citations": [
+      {
+        "title": "User-provided RAG dataset; verify before travel",
+        "publisher": "User-provided dataset",
+        "source_url": null,
+        "retrieved_at": "2026-09-12T05:03:33.282912Z",
+        "last_verified_at": null,
+        "reliability": 0.4,
+        "is_live": false
+      }
+    ],
+    "live_status": "unverified"
+  },
+  {
+    "id": "PY_PUD_003",
+    "name": "Sri Aurobindo Ashram",
+    "destination": "Puducherry",
+    "categories": [
+      "spiritual",
+      "heritage"
+    ],
+    "description": "Spiritual community founded by Sri Aurobindo and Mirra Alfassa (The Mother).",
+    "latitude": 11.9366,
+    "longitude": 79.8344,
+    "visit_minutes": 60,
+    "estimated_cost_inr": "0",
+    "opening_time": "08:00:00",
+    "closing_time": "18:00:00",
+    "indoor": false,
+    "dietary": [],
+    "accessibility": [],
+    "crowd_level": 5,
+    "citations": [
+      {
+        "title": "User-provided RAG dataset; verify before travel",
+        "publisher": "User-provided dataset",
+        "source_url": null,
+        "retrieved_at": "2026-09-12T05:03:33.282912Z",
+        "last_verified_at": null,
+        "reliability": 0.4,
+        "is_live": false
+      }
+    ],
+    "live_status": "unverified"
+  },
+  {
+    "id": "PY_PUD_004",
+    "name": "French Quarter (White Town)",
+    "destination": "Puducherry",
+    "categories": [
+      "heritage quarter",
+      "architecture"
+    ],
+    "description": "Colonial neighborhood featuring mustard-yellow villas, French street signs, and cafes.",
+    "latitude": 11.9333,
+    "longitude": 79.8333,
+    "visit_minutes": 150,
+    "estimated_cost_inr": "0",
+    "opening_time": "00:00:00",
+    "closing_time": "23:59:00",
+    "indoor": false,
+    "dietary": [],
+    "accessibility": [],
+    "crowd_level": 5,
+    "citations": [
+      {
+        "title": "User-provided RAG dataset; verify before travel",
+        "publisher": "User-provided dataset",
+        "source_url": null,
+        "retrieved_at": "2026-09-12T05:03:33.282912Z",
+        "last_verified_at": null,
+        "reliability": 0.4,
+        "is_live": false
+      }
+    ],
+    "live_status": "unverified"
+  }
+]

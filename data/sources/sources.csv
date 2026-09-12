@@ -1,0 +1,14 @@
+source_id,url,publisher,scope,content_type,collection_method,license,status,last_checked
+incredible-india,https://www.incredibleindia.gov.in/,Ministry of Tourism India,India,HTML,robots-aware crawl,verify site terms,collected,2026-09-12
+tamil-nadu-tourism,https://www.tamilnadutourism.tn.gov.in/,Tamil Nadu Tourism,Tamil Nadu,HTML,robots-aware crawl,verify site terms,collected,2026-09-12
+chennai-district-tourism,https://chennai.nic.in/tourism/,Chennai District,Chennai,HTML,seed page extraction,Government website; verify reuse terms,insufficient text,2026-09-12
+chengalpattu-mamallapuram,https://chengalpattu.nic.in/tourist-place/mamallapuram/,Chengalpattu District,Mamallapuram,HTML,robots-aware crawl,Government website; verify reuse terms,collected,2026-09-12
+puducherry-tourism,https://tourism.py.gov.in/,Puducherry Tourism,Puducherry,HTML,seed page extraction,Government website; verify reuse terms,robots unknown - skipped,2026-09-12
+puducherry-district,https://puducherry-dt.gov.in/tourist-places/,Puducherry District,Puducherry,HTML,seed page extraction,Government website; verify reuse terms,insufficient text,2026-09-12
+asi,https://asi.nic.in/,Archaeological Survey of India,India,HTML/PDF,seed page extraction,Government website; verify reuse terms,unsupported response - skipped,2026-09-12
+incredible-mamallapuram,https://www.incredibleindia.gov.in/en/tamil-nadu/mamallapuram,Ministry of Tourism India,Mamallapuram,HTML,robots-aware crawl,verify site terms,collected,2026-09-12
+incredible-puducherry,https://www.incredibleindia.gov.in/en/puducherry,Ministry of Tourism India,Puducherry,HTML,robots-aware crawl,verify site terms,collected,2026-09-12
+tourism-data,https://data.tourism.gov.in/,Ministry of Tourism India,India,HTML/API,robots-aware crawl,dataset-specific terms apply,collected,2026-09-12
+data-gov-in,https://www.data.gov.in/,Open Government Data Platform India,India,API/CSV,API preferred,GODL India where stated,robots unknown - skipped,2026-09-12
+tn-data-gov-in,https://tn.data.gov.in/,Tamil Nadu Open Data,Tamil Nadu,API/CSV,API preferred,dataset-specific terms apply,robots unknown - skipped,2026-09-12
+user-rag-data,,User-provided dataset,Chennai-Mamallapuram-Puducherry,JSON,local import,user-provided; original reuse terms require verification,collected,2026-09-12
