@@ -1,122 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="dark">
-<title>TravelMind AI</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23393A4F'/%3E%3Ccircle cx='10' cy='20' r='2.4' fill='%23AFFDF0'/%3E%3Ccircle cx='22' cy='10' r='2.4' fill='%23BEEF8D'/%3E%3Cpath d='M10 20 Q14 10 22 10' stroke='%233A745D' stroke-width='2' fill='none'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;600;700&family=Sanchez&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Columbus AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Epilogue:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="app">
+  <div class="desktop-bg">
 
-  <header class="topbar">
-    <button class="icon-btn only-mobile" id="leftToggle" aria-label="Open menu" aria-expanded="false">
-      <svg viewBox="0 0 20 20"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
-    </button>
-
-    <div class="brand">
-      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-        <circle cx="16" cy="16" r="15" fill="none" stroke="var(--teal)" stroke-width="1.4"/>
-        <path d="M10 20 Q14 10 22 10" fill="none" stroke="var(--teal)" stroke-width="1.6"/>
-        <circle cx="10" cy="20" r="2.6" fill="var(--aqua)"/>
-        <circle cx="22" cy="10" r="2.6" fill="var(--green)"/>
-      </svg>
-      <span>TravelMind<em>AI</em></span>
-    </div>
-
-    <nav class="topnav only-desktop">
-      <button class="nav-link" data-view="trips">My trips</button>
-      <button class="nav-link" data-view="prefs">Preferences</button>
-    </nav>
-
-    <div class="topbar-actions">
-      <button class="icon-btn only-mobile" id="rightToggle" aria-label="Open trip summary" aria-expanded="false">
-        <svg viewBox="0 0 20 20"><path d="M4 4h12v12H4z"/><path d="M4 8h12"/></svg>
-      </button>
-      <div class="avatar-container">
-        <div class="avatar" id="profileAvatar" title="Traveler">T</div>
-        <div class="profile-dropdown" id="profileDropdown">
-          <div class="dropdown-header">Not signed in</div>
-          <button class="dropdown-item">Log in</button>
-          <button class="dropdown-item">Sign up</button>
+    <!-- Left Sidebar for Widgets -->
+    <aside class="left-sidebar">
+      
+      <div class="widget widget-weather neo-panel" id="widgetWeather">
+        <div class="widget-header">Current Vibe</div>
+        <div class="widget-body">
+          <span class="text-xl">☀️ 28°C</span>
+          <p>Perfect beach weather.</p>
         </div>
       </div>
-    </div>
-  </header>
 
-  <div class="layout">
-
-    <div class="scrim" id="scrim"></div>
-
-    <aside class="rail rail-left" id="railLeft">
-      <button class="rail-item rail-item--primary" id="newChatBtn">
-        <svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg>
-        New chat
-      </button>
-
-      <div class="rail-section">
-        <span class="rail-label">Workspace</span>
-        <button class="rail-item" data-view="explore">
-          <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 2v12M2 8h12"/></svg>
-          Explore
-        </button>
-        <button class="rail-item" data-view="trips">
-          <svg viewBox="0 0 16 16"><path d="M2 12l4-8 4 6 2-3 2 5z"/></svg>
-          My trips
-        </button>
-        <button class="rail-item" data-view="saved">
-          <svg viewBox="0 0 16 16"><path d="M4 2h8v12l-4-3-4 3z"/></svg>
-          Saved
-        </button>
+      <div class="widget widget-map neo-panel" id="widgetMap">
+        <div class="widget-header">📍 Location</div>
+        <div class="widget-body map-placeholder" id="mapContent" onclick="requestLocation()">
+          <div class="map-initial">
+            <span style="font-size: 50px;">🗺️</span>
+            <br>
+            <small>Click to view map</small>
+          </div>
+        </div>
       </div>
 
-      <div class="rail-section rail-section--grow">
-        <span class="rail-label">Recent</span>
-        <ul class="history-list" id="historyList"></ul>
-        <p class="rail-empty" id="historyEmpty">Conversations you start will show up here.</p>
+      <div class="widget widget-tip neo-panel" id="widgetTip">
+        <div class="widget-header">💡 Travel Tip</div>
+        <div class="widget-body">
+          <p>Book local cabs a day in advance during peak season!</p>
+        </div>
       </div>
+
     </aside>
 
-    <main class="chat">
-      <div class="messages" id="messages">
+    <!-- Main Window -->
+    <div class="main-window neo-panel" id="mainWindow">
 
-        <div class="empty-state" id="emptyState">
-          <h1>Where to, and what matters most?</h1>
-          <p>Give me a destination, how many days, and what you care about — budget, food, pace, crowds. I'll build the plan around it.</p>
-          <div class="suggestions">
-            <button class="chip" data-fill="Plan a 3 day trip to Goa, vegetarian food, low crowds">3 days in Goa, vegetarian, low crowds</button>
-            <button class="chip" data-fill="5 days in Manali for 2 people, mid-range budget, some trekking">5 days in Manali, mid-range, light trekking</button>
-            <button class="chip" data-fill="4 day heritage trip to Jaipur for a family of 4, ₹40000 budget">4 days in Jaipur, family, ₹40,000 budget</button>
-            <button class="chip" data-fill="Relaxed 3 day honeymoon in Kerala backwaters">3 day honeymoon in Kerala, backwaters</button>
+      <header class="top-nav" id="mainHeader">
+        <div class="logo" onclick="goHome()">
+          <span class="logo-icon">✈️</span>
+          Columbus <span class="badge">AI</span>
+        </div>
+        <nav class="nav-links">
+          <button class="nav-btn active" data-target="viewHome">Explore</button>
+          <button class="nav-btn" data-target="viewTrips">My Trips</button>
+          <button class="nav-btn" data-target="viewSaved">Saved</button>
+          <button class="nav-btn" data-target="viewPrefs">Preferences</button>
+          
+          <div class="profile-menu">
+            <button class="nav-btn profile-icon-btn" onclick="toggleProfile()">👤</button>
+            <div id="profileDropdown" class="dropdown hidden neo-panel-inner">
+              <button onclick="openAuth('Login')">Login</button>
+              <button onclick="openAuth('Sign Up')">Sign Up</button>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      <main class="content-area" id="contentArea">
+
+        <div id="viewHome" class="view-section active">
+          <div class="hero">
+            <h1>Where are we going? 🌍</h1>
+            <p>Tell Columbus what you're looking for and we'll build the trip around you.</p>
+          </div>
+
+          <form id="tripForm" class="input-area neo-panel-inner">
+            <textarea id="tripInput" rows="3" placeholder='e.g. "Plan me a 4-day Goa trip with beaches, vegetarian food, low crowds and a ₹15,000 budget."'></textarea>
+            <div class="input-actions">
+              <div class="suggestions">
+                <button type="button" class="pill" onclick="fillPrompt(this)">🏖️ 4 days in Goa, veg, low crowds</button>
+                <button type="button" class="pill" onclick="fillPrompt(this)">🏔️ Manali weekend trek</button>
+              </div>
+              <button type="submit" class="primary-btn neo-btn" id="planTripBtn">PLAN MY TRIP ➔</button>
+            </div>
+          </form>
+        </div>
+
+        <div id="viewAuth" class="view-section">
+          <div class="hero">
+            <h1 id="authTitle">Login</h1>
+            <p>Save your trips and access them anywhere.</p>
+          </div>
+          <div class="input-area neo-panel-inner auth-box">
+            <input type="text" placeholder="Email" class="auth-input">
+            <input type="password" placeholder="Password" class="auth-input">
+            <button class="neo-btn primary-btn auth-submit" onclick="goHome()">Submit</button>
+            <button class="ghost-btn auth-guest" onclick="goHome()">Continue as guest</button>
           </div>
         </div>
 
-      </div>
+        <div id="viewLoading" class="view-section">
+          <div class="loading-state">
+            <div class="flying-plane">✈️</div>
+            <h2>Mapping out your perfect trip...</h2>
+            <p id="loadingStage">Understanding your preferences...</p>
+          </div>
+        </div>
 
-      <form class="composer" id="composerForm">
-        <textarea id="composerInput" rows="1" placeholder="Tell TravelMind where you're headed..." aria-label="Message"></textarea>
-        <button type="submit" class="send-btn" id="sendBtn" aria-label="Send message">
-          <svg viewBox="0 0 20 20"><path d="M3 10h13M11 5l5 5-5 5"/></svg>
-        </button>
-      </form>
-    </main>
+        <div id="viewItinerary" class="view-section">
+          <div class="itinerary-header">
+            <div>
+              <button class="ghost-btn back-btn" onclick="showView(state.returnView || 'viewHome')">← Back</button>
+              <h1 id="itineraryTitle">GOA — 4 DAYS</h1>
+              <p class="itinerary-meta" id="itineraryTags">₹15,000 budget · Vegetarian · Low crowds</p>
+            </div>
+            <div class="header-actions">
+              <button class="neo-btn secondary-btn" id="saveTripBtn" onclick="toggleSave()">🤍 Save Trip</button>
+              <button class="neo-btn secondary-btn" onclick="triggerReplan()">🌦️ Sim Weather AI</button>
+            </div>
+          </div>
 
-    <aside class="rail rail-right" id="railRight">
-      <h2 class="rail-title">Trip summary</h2>
-      <div class="trip-summary" id="tripSummary">
-        <p class="rail-empty">Start a conversation to build your trip summary here.</p>
-      </div>
-    </aside>
+          <div class="budget-panel neo-panel-inner" id="budgetPanel"></div>
 
+          <div id="replanAlert" class="replan-alert neo-panel-inner hidden"></div>
+
+          <div class="days-container" id="daysContainer"></div>
+        </div>
+
+        <div id="viewTrips" class="view-section">
+          <div class="hero" style="text-align: left; margin-bottom: 20px;">
+            <h1>My Past Trips 🧳</h1>
+            <p>Look back at where you've been.</p>
+          </div>
+          <div id="myTripsContainer"></div>
+        </div>
+
+        <div id="viewSaved" class="view-section">
+          <div class="hero" style="text-align: left; margin-bottom: 20px;">
+            <h1>Saved Trips 🤍</h1>
+            <p>Ideas you're saving for later.</p>
+          </div>
+          <div id="savedTripsContainer"></div>
+
+          <div class="hero" style="text-align: left; margin: 40px 0 20px;">
+            <h1 style="font-size: 28px;">Saved Places 📍</h1>
+          </div>
+          <div id="savedPlacesContainer" class="places-grid"></div>
+        </div>
+
+        <div id="viewPrefs" class="view-section">
+          <div class="hero" style="text-align: left; margin-bottom: 20px;">
+            <h1>Travel Preferences ⚙️</h1>
+            <p>Teach Columbus how you like to travel.</p>
+          </div>
+          <div class="neo-panel-inner prefs-form" id="prefsForm"></div>
+        </div>
+
+      </main>
+
+    </div>
   </div>
-</div>
 
-<script src="app.js"></script>
+  <div id="toastContainer"></div>
+
+  <div class="modal-overlay hidden" id="activityModal">
+    <div class="modal-box" onclick="event.stopPropagation();">
+      <button class="modal-close" onclick="closeActivityModal()">✕</button>
+      <div id="activityModalContent"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
