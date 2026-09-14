@@ -282,6 +282,20 @@ h1, h2, h3 { font-family: var(--font-display); }
   background: #FFF;
 }
 
+.planner-message {
+  margin-top: 16px;
+  padding: 16px 18px;
+  white-space: pre-line;
+  line-height: 1.55;
+  font-weight: 650;
+  background: var(--accent-yellow);
+}
+
+.planner-message.error {
+  background: #ffe3e3;
+  border-color: #a61b1b;
+}
+
 .auth-box {
   max-width: 400px;
   margin: 0 auto;
@@ -481,6 +495,32 @@ h1, h2, h3 { font-family: var(--font-display); }
 .ai-tag { background: var(--primary); color: white; font-size: 11px; }
 
 .activity-actions { display: flex; gap: 6px; }
+
+.restaurant-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(180px, auto);
+  gap: 14px;
+  align-items: center;
+  margin: 16px 0 20px;
+  padding: 15px;
+  border: 2px solid var(--black);
+  border-radius: var(--radius-sm);
+  background: #fff8dc;
+  box-shadow: 3px 3px 0 var(--black);
+}
+
+.restaurant-card.unavailable { display: block; color: var(--text-muted); }
+.restaurant-icon { font-size: 28px; }
+.restaurant-card h4 { margin: 3px 0 5px; font-size: 17px; }
+.restaurant-card p { margin: 2px 0; color: var(--text-muted); font-size: 13px; }
+.restaurant-card small { color: var(--text-muted); }
+.restaurant-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: right;
+  font-size: 13px;
+}
 .icon-btn {
   background: #F5F5F5;
   border: 2px solid var(--black);
@@ -604,6 +644,45 @@ h1, h2, h3 { font-family: var(--font-display); }
   .content-area { padding: 20px; }
   .itinerary-header { flex-direction: column; align-items: flex-start; gap: 15px; }
   .activity { grid-template-columns: 1fr; }
+  .restaurant-card { grid-template-columns: 1fr; }
+  .restaurant-meta { text-align: left; }
   .activity-actions { justify-content: flex-start; margin-top: 8px; }
   .meta { align-items: flex-start; }
+}
+
+.hotel-panel {
+  margin-bottom: 22px;
+}
+
+.hotel-panel h2 {
+  margin: 6px 0 14px;
+}
+
+.hotel-recommendations,
+.knowledge-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.hotel-card,
+.knowledge-hit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 2px solid var(--black);
+  background: var(--white);
+  box-shadow: 3px 3px 0 var(--black);
+}
+
+.hotel-card span,
+.hotel-card small,
+.knowledge-hit p,
+.knowledge-hit small {
+  color: var(--text-muted);
+}
+
+.knowledge-results {
+  margin-top: 20px;
 }

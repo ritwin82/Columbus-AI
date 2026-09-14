@@ -126,6 +126,46 @@ async def test_openrouter_supplies_exact_gemma_and_bge_models() -> None:
         await gateway.close()
 
 
+async def test_openrouter_task_rate_limit_retries_planner_model() -> None:
+    requested_models: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content)
+        requested_models.append(payload["model"])
+        if payload["model"] == "google/gemma-3-4b-it":
+            return httpx.Response(429, json={"error": {"message": "upstream busy"}})
+        return httpx.Response(
+            200,
+            json={"choices": [{"message": {"content": '{"value":"ready"}'}}]},
+        )
+
+    settings = Settings(
+        enable_local_models=True,
+        model_provider_order="openrouter,ollama",
+        openrouter_api_key="test-openrouter-key",
+    )
+    gateway = OllamaGateway(settings)
+    await gateway._openrouter_client.aclose()
+    gateway._openrouter_client = httpx.AsyncClient(
+        base_url="https://openrouter.test", transport=httpx.MockTransport(handler)
+    )
+    try:
+        result = await gateway.chat(
+            model=settings.task_model,
+            prompt="test",
+            system="test",
+            schema=Answer,
+        )
+        assert result == Answer(value="ready")
+        assert requested_models == [
+            "google/gemma-3-4b-it",
+            "google/gemma-3-12b-it",
+        ]
+        assert gateway.last_chat_provider == "openrouter"
+    finally:
+        await gateway.close()
+
+
 async def test_google_ai_supplies_chat_and_embedding_fallbacks() -> None:
     requested_paths: list[str] = []
 

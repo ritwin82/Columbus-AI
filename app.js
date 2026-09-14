@@ -31,21 +31,8 @@ let prefs = loadJSON(STORE.PREFS, DEFAULT_PREFS);
 const ACCOMMODATION_RATES = { budget: 800, mid: 1800, luxury: 4500 };
 const INTEREST_OPTIONS = ['beaches', 'culture', 'nature', 'food', 'adventure'];
 const DEFAULT_WEATHER = { icon: '☀️', temp: '28°C', desc: 'Perfect beach weather.' };
-const API_BASE = window.COLUMBUS_API_BASE || 'http://localhost:8000/api/v1';
-const PLACE_COORDS = {
-  'Basilica of Bom Jesus': [15.5009, 73.9116],
-  'Old Goa Exploration': [15.4989, 73.8278],
-  'Vegetarian Lunch at Navtara': [15.4909, 73.8278],
-  'Quiet Beach — Ashwem': [15.6592, 73.7196],
-  'Solang Valley Trek': [32.3161, 77.1570],
-  'Vegetarian Himachali Thali': [32.2432, 77.1892],
-  'Hidimba Devi Temple': [32.2420, 77.1777],
-  'Amber Fort': [26.9855, 75.8513],
-  'Vegetarian Rajasthani Thali': [26.9124, 75.7873],
-  'City Palace': [26.9258, 75.8237],
-  'Local Heritage Walk': [13.0827, 80.2707],
-  'Vegetarian Local Thali': [13.0674, 80.2376]
-};
+const API_BASE = window.COLUMBUS_API_BASE || '/api/v1';
+const USER_ID = loadJSON('tm_user_id', 'demo-user');
 const WEATHER_ICON = { clear: '☀️', clouds: '☁️', rain: '🌧️', drizzle: '🌦️', thunderstorm: '⛈️', snow: '❄️', mist: '🌫️', haze: '🌫️' };
 let itineraryMap = null;
 let itineraryMapLayer = null;
@@ -53,61 +40,161 @@ let itineraryMapLayer = null;
 let state = {
   currentTrip: null,
   returnView: 'viewHome',
-  replanTarget: null
+  replanTarget: null,
+  serviceStatus: null,
+  pendingQuery: ''
 };
 
-const DESTINATIONS = {
-  goa: {
-    label: 'GOA',
-    weather: { icon: '☀️', temp: '28°C', desc: 'Perfect beach weather.' },
-    map: '🌴 🏖️',
-    pool: [
-      { id: 'goa1', time: '09:00 AM', title: 'Basilica of Bom Jesus', desc: '16th-century church & UNESCO World Heritage site.', cost: 0, travel: '15 min', category: 'culture', veg: true, crowd: 'high', rating: 4.6, hours: '9:00 AM – 6:30 PM', distance: '6 km', why: 'Iconic heritage site, a great way to start the day.' },
-      { id: 'goa2', time: '11:00 AM', title: 'Old Goa Exploration', desc: 'Wander the colorful Latin Quarter.', cost: 0, travel: 'Walk', category: 'culture', veg: true, crowd: 'high', rating: 4.4, hours: 'Open 24 hours', distance: '0.5 km', why: 'Walkable from the previous stop, keeps the morning easy.' },
-      { id: 'goa3', time: '01:00 PM', title: 'Vegetarian Lunch at Navtara', desc: 'Local Goan veg thali.', cost: 400, travel: '10 min', category: 'food', veg: true, crowd: 'low', rating: 4.3, hours: '12:00 PM – 4:00 PM', distance: '3 km', why: 'Matches your vegetarian preference.' },
-      { id: 'goa5', time: '03:30 PM', title: 'Quiet Beach — Ashwem', desc: 'Relax at Ashwem Beach, away from the crowds.', cost: 0, travel: '45 min', category: 'beach', veg: true, crowd: 'low', rating: 4.7, hours: 'Open 24 hours', distance: '22 km', why: 'Matches your low-crowds preference.' }
-    ]
-  },
-  manali: {
-    label: 'MANALI',
-    weather: { icon: '⛅', temp: '14°C', desc: 'Cool mountain air, light jacket advised.' },
-    map: '🏔️ 🌲',
-    pool: [
-      { id: 'man1', time: '08:00 AM', title: 'Solang Valley Trek', desc: 'Scenic trek with valley & snow-peak views.', cost: 0, travel: '40 min', category: 'adventure', veg: true, crowd: 'high', rating: 4.6, hours: '7:00 AM – 5:00 PM', distance: '14 km', why: 'A must-do adventure activity near Manali.' },
-      { id: 'man2', time: '12:30 PM', title: 'Vegetarian Himachali Thali', desc: 'Local dham-style thali.', cost: 350, travel: '10 min', category: 'food', veg: true, crowd: 'low', rating: 4.4, hours: '12:00 PM – 9:00 PM', distance: '2 km', why: 'Matches your vegetarian preference.' },
-      { id: 'man3', time: '02:30 PM', title: 'Hidimba Devi Temple', desc: 'Ancient wooden temple in a cedar forest.', cost: 0, travel: '15 min', category: 'culture', veg: true, crowd: 'low', rating: 4.5, hours: '6:00 AM – 8:00 PM', distance: '3 km', why: 'Quieter cultural stop shaded by cedar forest.' }
-    ]
-  },
-  jaipur: {
-    label: 'JAIPUR',
-    weather: { icon: '🌤️', temp: '31°C', desc: 'Warm & dry, carry water.' },
-    map: '🏰 🐫',
-    pool: [
-      { id: 'jai1', time: '09:00 AM', title: 'Amber Fort', desc: 'Majestic hilltop fort overlooking the city.', cost: 200, travel: '30 min', category: 'culture', veg: true, crowd: 'high', rating: 4.7, hours: '8:00 AM – 5:30 PM', distance: '11 km', why: "Jaipur's most iconic heritage site." },
-      { id: 'jai2', time: '01:00 PM', title: 'Vegetarian Rajasthani Thali', desc: 'Dal baati churma & more.', cost: 450, travel: '10 min', category: 'food', veg: true, crowd: 'low', rating: 4.5, hours: '11:00 AM – 11:00 PM', distance: '4 km', why: 'Matches your vegetarian preference.' },
-      { id: 'jai3', time: '03:00 PM', title: 'City Palace', desc: 'Royal palace complex & museum.', cost: 300, travel: '15 min', category: 'culture', veg: true, crowd: 'high', rating: 4.6, hours: '9:30 AM – 5:00 PM', distance: '2 km', why: 'Rich royal history at the heart of the city.' }
-    ]
-  },
-  default: {
-    label: 'YOUR TRIP',
-    weather: { icon: '🌤️', temp: '26°C', desc: 'Pleasant travel weather.' },
-    map: '📍',
-    pool: [
-      { id: 'gen1', time: '09:00 AM', title: 'Local Heritage Walk', desc: 'Explore the historic quarter on foot.', cost: 0, travel: '15 min', category: 'culture', veg: true, crowd: 'high', rating: 4.3, hours: 'Open all day', distance: '2 km', why: 'A gentle way to get oriented on day one.' },
-      { id: 'gen2', time: '01:00 PM', title: 'Vegetarian Local Thali', desc: 'A local vegetarian specialty meal.', cost: 350, travel: '10 min', category: 'food', veg: true, crowd: 'low', rating: 4.4, hours: '12:00 PM – 10:00 PM', distance: '3 km', why: 'Matches your vegetarian preference.' }
-    ]
+function humanizeApiError(body, statusCode) {
+  const detail = body && body.detail != null ? body.detail : body;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail.map(item => {
+      const field = Array.isArray(item.loc)
+        ? item.loc.filter(part => part !== 'body').join(' → ')
+        : 'request';
+      return `${field || 'request'}: ${item.msg || 'Invalid value'}`;
+    }).join('\n');
   }
-};
+  if (detail && typeof detail === 'object') {
+    const lines = [detail.message || `The trip could not be planned (${statusCode}).`];
+    if (Array.isArray(detail.reasons) && detail.reasons.length) {
+      lines.push(`Why: ${detail.reasons.join(' ')}`);
+    }
+    if (Array.isArray(detail.suggestions) && detail.suggestions.length) {
+      lines.push(`Try: ${detail.suggestions.join(' ')}`);
+    }
+    return lines.join('\n');
+  }
+  return `The trip could not be planned (${statusCode}). Please review the details and try again.`;
+}
 
-const INDOOR_ALTERNATIVES = {
-  goa: [
-    { title: 'Goa State Museum', desc: 'Indoor historical artifacts.', cost: 100, travel: '20 min' },
-    { title: 'Fontainhas Café Hop', desc: 'Cozy indoor cafés in the Latin Quarter.', cost: 300, travel: '10 min' }
-  ],
-  default: [
-    { title: 'Local Indoor Museum', desc: 'A cozy indoor spot to wait out the rain.', cost: 100, travel: '15 min' }
-  ]
-};
+async function apiRequest(path, options) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json', ...(options && options.headers) },
+    ...options
+  });
+  if (!response.ok) {
+    let message = `Request failed (${response.status})`;
+    try {
+      const body = await response.json();
+      message = humanizeApiError(body, response.status);
+    } catch (_) {
+      // Keep the HTTP status when the server did not return JSON.
+    }
+    throw new Error(message);
+  }
+  return response.status === 204 ? null : response.json();
+}
+
+function apiQuery(path, params) {
+  const query = new URLSearchParams();
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value == null || value === '') return;
+    (Array.isArray(value) ? value : [value]).forEach(item => query.append(key, item));
+  });
+  return apiRequest(`${path}?${query.toString()}`);
+}
+
+function toNumber(value, fallback) {
+  if (value == null || value === '') return fallback || 0;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : (fallback || 0);
+}
+
+function escapeHTML(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function dateFromNow(daysAhead) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysAhead);
+  return date.toISOString().slice(0, 10);
+}
+
+function formatApiTime(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? String(value || '')
+    : date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function normalizeCategory(categories) {
+  const values = (categories || []).map(value => String(value).toLowerCase());
+  return values.find(value => ['food', 'restaurant', 'beach', 'nature', 'culture', 'museum', 'temple', 'indoor'].includes(value)) || values[0] || 'attraction';
+}
+
+function itineraryFromApi(result, context) {
+  context = context || {};
+  const firstActivity = result.days.flatMap(day => day.activities)[0];
+  const destination = context.destination || (firstActivity && firstActivity.place.destination) || result.title;
+  const apiBudget = result.budget || {};
+  const activities = result.days.map((day, dayIndex) => ({
+    day: `DAY ${String(dayIndex + 1).padStart(2, '0')}`,
+    title: new Date(`${day.date}T00:00:00`).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' }),
+    date: day.date,
+    activities: day.activities.map(activity => {
+      const place = activity.place;
+      const route = activity.route_from_previous;
+      return {
+        id: activity.id,
+        time: formatApiTime(activity.start_at),
+        title: place.name,
+        desc: place.description || 'Recommended by Columbus AI.',
+        cost: toNumber(activity.estimated_cost_inr),
+        travel: route ? `${route.duration_minutes} min` : 'Start',
+        category: normalizeCategory(place.categories),
+        rating: place.rating,
+        ratingSource: place.rating_source,
+        hours: `${String(place.opening_time).slice(0, 5)} – ${String(place.closing_time).slice(0, 5)}`,
+        distance: route ? `${toNumber(route.distance_km).toFixed(1)} km` : '—',
+        why: activity.reason || 'Selected for your preferences, route, budget, and opening hours.',
+        coordinates: [place.latitude, place.longitude],
+        locked: Boolean(activity.locked),
+        warnings: activity.warnings || [],
+        citations: place.citations || []
+      };
+    }),
+    restaurant: day.restaurant ? {
+      id: day.restaurant.id,
+      name: day.restaurant.name,
+      destination: day.restaurant.destination,
+      area: day.restaurant.area,
+      cuisines: day.restaurant.cuisines || [],
+      dietary: day.restaurant.dietary || [],
+      costForTwo: toNumber(day.restaurant.average_cost_for_two_inr),
+      rating: day.restaurant.rating,
+      ratingSource: day.restaurant.rating_source,
+      sourceNote: day.restaurant.source_note
+    } : null
+  }));
+  return {
+    id: result.trip_id,
+    tripId: result.trip_id,
+    version: result.version,
+    destKey: String(destination).toLowerCase().replace(/[^a-z]+/g, '-'),
+    destLabel: String(destination).toUpperCase(),
+    days: result.days.length,
+    budget: toNumber(apiBudget.limit, context.budget),
+    vegetarian: context.vegetarian != null ? context.vegetarian : prefs.vegetarian,
+    lowCrowds: context.lowCrowds != null ? context.lowCrowds : prefs.lowCrowds,
+    pace: context.pace || prefs.pace,
+    itinerary: activities,
+    weather: DEFAULT_WEATHER,
+    summary: result.summary,
+    recommendedHotels: result.recommended_hotels || [],
+    budgetBreakdown: apiBudget,
+    citations: result.citations || [],
+    violations: result.violations || [],
+    negotiationOptions: result.negotiation_options || [],
+    confidence: result.confidence
+  };
+}
 
 const LOADING_STAGES = [
   'Understanding your preferences...',
@@ -143,6 +230,8 @@ function goHome() {
   document.getElementById('replanAlert').classList.add('hidden');
   state.currentTrip = null;
   state.replanTarget = null;
+  state.pendingQuery = '';
+  clearPlannerMessage();
   resetMapWidget();
   updateWeatherWidget(DEFAULT_WEATHER);
   showView('viewHome');
@@ -206,12 +295,12 @@ function resetMapWidget() {
 function parseTripInput(text) {
   const lower = text.toLowerCase();
   let destKey = null;
-  if (lower.includes('goa')) destKey = 'goa';
-  else if (lower.includes('manali')) destKey = 'manali';
-  else if (lower.includes('jaipur')) destKey = 'jaipur';
+  if (lower.includes('chennai')) destKey = 'chennai';
+  else if (lower.includes('mamallapuram') || lower.includes('mahabalipuram')) destKey = 'mamallapuram';
+  else if (lower.includes('puducherry') || lower.includes('pondicherry')) destKey = 'puducherry';
   let days = null;
   const dayMatch = lower.match(/(\d+)\s*-?\s*day/);
-  if (dayMatch) days = Math.max(1, Math.min(7, parseInt(dayMatch[1], 10)));
+  if (dayMatch) days = Math.max(1, Math.min(5, parseInt(dayMatch[1], 10)));
   else if (lower.includes('weekend')) days = 2;
   let vegetarian = null;
   if (lower.includes('non-veg') || lower.includes('non veg')) vegetarian = false;
@@ -241,67 +330,79 @@ function buildTripParams(text) {
   };
 }
 
-function to24h(t) {
-  const [time, mer] = t.split(' ');
-  let [h, m] = time.split(':').map(Number);
-  if (mer === 'PM' && h !== 12) h += 12;
-  if (mer === 'AM' && h === 12) h = 0;
-  return h * 60 + m;
+function showPlannerMessage(message, type) {
+  const panel = document.getElementById('plannerMessage');
+  if (!panel) return;
+  panel.className = `planner-message neo-panel-inner ${type || 'question'}`;
+  panel.textContent = message;
+  panel.classList.remove('hidden');
 }
 
-function generateItinerary(params) {
-  const dest = DESTINATIONS[params.destKey] || DESTINATIONS.default;
-  let pool = dest.pool
-    .filter(act => act.category !== 'food' || !params.vegetarian || act.veg)
-    .map(act => ({ ...act }));
-  if (params.lowCrowds) {
-    pool.sort((a, b) => (a.crowd === 'low' ? 0 : 1) - (b.crowd === 'low' ? 0 : 1));
+function clearPlannerMessage() {
+  const panel = document.getElementById('plannerMessage');
+  if (panel) panel.classList.add('hidden');
+}
+
+function fallbackDestinations(text) {
+  const lower = text.toLowerCase();
+  const destinations = [];
+  if (lower.includes('chennai')) destinations.push('Chennai');
+  if (lower.includes('mamallapuram') || lower.includes('mahabalipuram')) destinations.push('Mamallapuram');
+  if (lower.includes('puducherry') || lower.includes('pondicherry')) destinations.push('Puducherry');
+  return destinations;
+}
+
+function tripRequestFromIntent(text, intent) {
+  const local = buildTripParams(text);
+  const destinations = intent.destinations && intent.destinations.length
+    ? intent.destinations
+    : fallbackDestinations(text);
+  if (!destinations.length) {
+    throw new Error('Please include Chennai, Mamallapuram, or Puducherry in your request.');
   }
-  const seenTimes = new Set();
-  pool = pool.filter(act => {
-    if (seenTimes.has(act.time)) return false;
-    seenTimes.add(act.time);
-    return true;
-  });
-  pool.sort((a, b) => to24h(a.time) - to24h(b.time));
-  const perDay = params.pace === 'relaxed' ? 3 : params.pace === 'packed' ? 5 : 4;
-  const days = [];
-  for (let d = 1; d <= params.days; d++) {
-    const dayActs = [];
-    for (let i = 0; i < perDay; i++) {
-      const flatIdx = (d - 1) * perDay + i;
-      const src = pool.length ? pool[flatIdx % pool.length] : null;
-      if (src) dayActs.push({ ...src, id: src.id + '_d' + d + '_' + i });
-    }
-    days.push({
-      day: 'DAY ' + String(d).padStart(2, '0'),
-      title: d === 1 ? 'Arrival & First Impressions' : 'Exploring ' + dest.label,
-      activities: dayActs
-    });
-  }
+  const vegetarian = (intent.dietary || []).includes('vegetarian') || local.vegetarian;
+  const lowCrowds = toNumber(intent.crowd_tolerance, 5) <= 3 || local.lowCrowds;
+  const pace = intent.pace || local.pace || prefs.pace;
+  const budget = toNumber(intent.budget_inr, local.budget || prefs.budget);
   return {
-    destKey: params.destKey,
-    destLabel: dest.label,
-    days: params.days,
-    budget: params.budget,
-    vegetarian: params.vegetarian,
-    lowCrowds: params.lowCrowds,
-    pace: params.pace,
-    itinerary: days,
-    map: dest.map,
-    weather: dest.weather
+    payload: {
+      user_id: USER_ID,
+      origin: intent.origin || 'Chennai',
+      destinations,
+      start_date: dateFromNow(1),
+      days: toNumber(intent.days, local.days || 3),
+      travellers: toNumber(intent.travellers, 1),
+      budget_inr: String(budget),
+      preferences: {
+        interests: (intent.interests && intent.interests.length) ? intent.interests : prefs.interests,
+        dietary: vegetarian ? ['vegetarian'] : (intent.dietary || []),
+        accessibility: intent.accessibility || [],
+        excluded_categories: [],
+        pace,
+        travel_mode: intent.travel_mode || 'drive',
+        crowd_tolerance: lowCrowds ? 3 : toNumber(intent.crowd_tolerance, 5),
+        preferred_language: intent.language || 'en'
+      },
+      mandatory_place_ids: [],
+      locked_activity_ids: []
+    },
+    context: {
+      destination: destinations.join(' · '),
+      budget,
+      vegetarian,
+      lowCrowds,
+      pace
+    }
   };
 }
 
-async function getWeather(destKey) {
-  const fallback = (DESTINATIONS[destKey] || DESTINATIONS.default).weather;
-  const first = (DESTINATIONS[destKey] || DESTINATIONS.default).pool[0];
-  const coords = first ? PLACE_COORDS[first.title] : null;
+async function getWeatherForTrip(trip) {
+  const first = trip.itinerary.flatMap(day => day.activities).find(activity => activity.coordinates);
+  const coords = first && first.coordinates;
+  const fallback = DEFAULT_WEATHER;
   if (!coords) return fallback;
   try {
-    const response = await fetch(`${API_BASE}/weather?latitude=${coords[0]}&longitude=${coords[1]}`);
-    if (!response.ok) throw new Error('Weather service unavailable');
-    const forecast = await response.json();
+    const forecast = await apiQuery('/weather', { latitude: coords[0], longitude: coords[1] });
     if (!forecast.length) return fallback;
     const current = forecast[0];
     const condition = String(current.condition || '').toLowerCase();
@@ -312,18 +413,25 @@ async function getWeather(destKey) {
       source: current.source
     };
   } catch (error) {
-    return { ...fallback, desc: `${fallback.desc} Demo forecast — start the API for live OpenWeather.` };
+    return { ...fallback, desc: `${fallback.desc} Weather service unavailable: ${error.message}` };
   }
 }
-function getPlaces(destKey) {
-  return new Promise(resolve => {
-    setTimeout(() => resolve((DESTINATIONS[destKey] || DESTINATIONS.default).pool), 200);
-  });
-}
-function getRoutes(dayActivities) {
-  return new Promise(resolve => {
-    setTimeout(() => resolve((dayActivities || []).map(a => ({ to: a.title, travelTime: a.travel }))), 150);
-  });
+
+async function enrichTripFromServices(trip, context) {
+  const query = [context.destination, ...(prefs.interests || [])].join(' ');
+  const [weather, knowledgeHits, hotels] = await Promise.all([
+    getWeatherForTrip(trip),
+    apiQuery('/knowledge/search', { query, limit: 8 }).catch(() => []),
+    apiQuery('/hotels/search', {
+      destination: context.destination.split(' · ')[0],
+      max_price_inr: Math.max(1000, Math.floor(context.budget / Math.max(trip.days, 1))),
+      limit: 6
+    }).catch(() => trip.recommendedHotels || [])
+  ]);
+  trip.weather = weather;
+  trip.knowledgeHits = knowledgeHits;
+  if (hotels.length) trip.recommendedHotels = hotels;
+  return trip;
 }
 
 function runLoadingSequence(callback) {
@@ -340,7 +448,7 @@ function runLoadingSequence(callback) {
   }, LOADING_STAGES.length * 380 + 200);
 }
 
-document.getElementById('tripForm').addEventListener('submit', (e) => {
+document.getElementById('tripForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const input = document.getElementById('tripInput');
   const value = input.value.trim();
@@ -356,19 +464,47 @@ document.getElementById('tripForm').addEventListener('submit', (e) => {
   }
   planBtn.disabled = true;
   planBtn.textContent = 'PLANNING...';
+  clearPlannerMessage();
   showView('viewLoading');
-  const params = buildTripParams(value);
-  Promise.all([getWeather(params.destKey), getPlaces(params.destKey)]).then(([weather]) => {
-    runLoadingSequence(() => {
-      const trip = generateItinerary(params);
-      trip.weather = weather;
-      trip.id = 'trip_' + params.destKey + '_' + Date.now();
-      addToMyTrips(trip);
-      displayItinerary(trip, { returnView: 'viewHome' });
-      planBtn.disabled = false;
-      planBtn.textContent = 'PLAN MY TRIP ➔';
+  try {
+    const fullQuery = state.pendingQuery
+      ? `${state.pendingQuery}\nAdditional information: ${value}`
+      : value;
+    const intent = await apiRequest('/intent', {
+      method: 'POST',
+      body: JSON.stringify({ text: fullQuery })
     });
-  });
+    if (intent.missing_required_fields && intent.missing_required_fields.length) {
+      state.pendingQuery = fullQuery;
+      showView('viewHome');
+      showPlannerMessage(
+        intent.clarification_question || 'I need a few more trip details before I can plan it.',
+        'question'
+      );
+      input.value = '';
+      input.placeholder = 'Reply with the missing information here…';
+      input.focus();
+      return;
+    }
+    state.pendingQuery = '';
+    input.placeholder = 'e.g. "Plan a 4-day Chennai, Mamallapuram and Puducherry trip with vegetarian food, heritage sites and a ₹25,000 budget."';
+    const request = tripRequestFromIntent(fullQuery, intent);
+    const result = await apiRequest('/trips/generate', {
+      method: 'POST',
+      body: JSON.stringify(request.payload)
+    });
+    const trip = await enrichTripFromServices(itineraryFromApi(result, request.context), request.context);
+    await new Promise(resolve => runLoadingSequence(resolve));
+    addToMyTrips(trip);
+    displayItinerary(trip, { returnView: 'viewHome' });
+  } catch (error) {
+    showView('viewHome');
+    showPlannerMessage(error.message, 'error');
+    showToast('I could not create that trip. See the explanation below the planner.', 'error');
+  } finally {
+    planBtn.disabled = false;
+    planBtn.textContent = 'PLAN MY TRIP ➔';
+  }
 });
 
 function displayItinerary(trip, opts) {
@@ -383,18 +519,20 @@ function displayItinerary(trip, opts) {
   renderBudget(trip);
   renderMapTabs(trip);
   renderKnowledgeGraph(trip);
+  renderHotels(trip);
   updateWeatherWidget(trip.weather);
   updateSaveBtnState();
   showView('viewItinerary');
 }
 
 function buildAiSummary(trip) {
+  if (trip.summary) return trip.summary;
   const stopCount = trip.itinerary.reduce((sum, day) => sum + day.activities.length, 0);
   return `I’ve planned a ${trip.days}-day ${trip.destLabel.toLowerCase()} escape with ${stopCount} thoughtfully sequenced stops, balancing ${trip.pace} days, ${trip.vegetarian ? 'vegetarian-friendly food' : 'flexible dining'}, ${trip.lowCrowds ? 'quieter experiences' : 'the essential highlights'}, and your ₹${trip.budget.toLocaleString('en-IN')} budget; use the day maps to follow each route and open the knowledge graph to see why the places belong together.`;
 }
 
 function activityCoords(activity) {
-  return activity.coordinates || PLACE_COORDS[activity.title] || null;
+  return activity.coordinates || null;
 }
 
 function haversineKm(left, right) {
@@ -450,7 +588,20 @@ function formatDuration(minutes) {
 
 function renderKnowledgeGraph(trip) {
   const nodes = trip.itinerary.flatMap((day, dayIndex) => day.activities.map(activity => ({ ...activity, dayIndex })));
-  document.getElementById('knowledgeGraph').innerHTML = `<div class="graph-canvas"><div class="graph-hub">${trip.destLabel}</div>${nodes.map((node, index) => `<div class="graph-node" style="--node-index:${index};--node-count:${Math.max(nodes.length, 1)}"><span>${node.title}</span><small>Day ${node.dayIndex + 1} · ${node.category}</small></div>`).join('')}</div><p class="graph-legend">Relationships show how destination, day, activity type, and preferences informed this itinerary.</p>`;
+  document.getElementById('knowledgeGraph').innerHTML = `<div class="graph-canvas"><div class="graph-hub">${escapeHTML(trip.destLabel)}</div>${nodes.map((node, index) => `<div class="graph-node" style="--node-index:${index};--node-count:${Math.max(nodes.length, 1)}"><span>${escapeHTML(node.title)}</span><small>Day ${node.dayIndex + 1} · ${escapeHTML(node.category)}</small></div>`).join('')}</div><p class="graph-legend">Relationships show how destination, day, activity type, and preferences informed this itinerary. Raw retrieval chunks are intentionally kept out of this view.</p>`;
+}
+
+function renderHotels(trip) {
+  const panel = document.getElementById('hotelRecommendations');
+  if (!panel) return;
+  const hotels = trip.recommendedHotels || [];
+  panel.innerHTML = hotels.length ? hotels.map(hotel => `
+    <article class="hotel-card">
+      <strong>${escapeHTML(hotel.name)}</strong>
+      <span>${escapeHTML(hotel.area)} · ${escapeHTML(hotel.accommodation_type)}</span>
+      <span>₹${toNumber(hotel.estimated_price_from_inr).toLocaleString('en-IN')}–₹${toNumber(hotel.estimated_price_to_inr).toLocaleString('en-IN')} per night</span>
+      <small>${escapeHTML((hotel.amenities || []).slice(0, 4).join(' · '))}</small>
+    </article>`).join('') : '<p>No matching hotels were found for this budget.</p>';
 }
 
 function toggleKnowledgeGraph() {
@@ -479,9 +630,34 @@ function renderDays(trip) {
       </div>
       <div class="day-content">
         ${day.activities.length ? day.activities.map(act => renderActivityRow(act, dayIdx)).join('') : '<p class="empty-day">No activities left for this day — add some from Explore.</p>'}
+        ${renderRestaurantCard(day.restaurant)}
       </div>
     </div>
   `).join('');
+}
+
+function renderRestaurantCard(restaurant) {
+  if (!restaurant) {
+    return '<p class="restaurant-card unavailable">🍽️ No verified restaurant match is available for this day.</p>';
+  }
+  const rating = restaurant.rating != null
+    ? `${Number(restaurant.rating).toFixed(1)} / 5`
+    : 'Rating unavailable';
+  return `
+    <article class="restaurant-card">
+      <div class="restaurant-icon">🍽️</div>
+      <div>
+        <small>RECOMMENDED MEAL</small>
+        <h4>${escapeHTML(restaurant.name)}</h4>
+        <p>${escapeHTML(restaurant.area)} · ${escapeHTML(restaurant.cuisines.join(', '))}</p>
+        <p>${escapeHTML(restaurant.dietary.join(' · '))}</p>
+      </div>
+      <div class="restaurant-meta">
+        <strong>⭐ ${rating}</strong>
+        <span>Approx. ₹${restaurant.costForTwo.toLocaleString('en-IN')} for two</span>
+        <small>${escapeHTML(restaurant.sourceNote || 'Verify current details before visiting.')}</small>
+      </div>
+    </article>`;
 }
 
 function renderActivityRow(act, dayIdx) {
@@ -494,6 +670,7 @@ function renderActivityRow(act, dayIdx) {
         <p>${act.desc}</p>
       </div>
       <div class="meta">
+        <div>⭐ ${act.rating != null ? Number(act.rating).toFixed(1) : 'Not rated'}</div>
         <div>💰 ${act.cost ? '₹' + act.cost : 'Free'}</div>
         <div>🚗 ${act.travel}</div>
         <span class="tag">Open</span>
@@ -530,6 +707,16 @@ function toggleDay(header) {
 }
 
 function computeBudget(trip) {
+  if (trip.budgetBreakdown) {
+    return {
+      stay: toNumber(trip.budgetBreakdown.accommodation),
+      transport: toNumber(trip.budgetBreakdown.transport),
+      food: toNumber(trip.budgetBreakdown.food),
+      activities: toNumber(trip.budgetBreakdown.attractions),
+      contingency: toNumber(trip.budgetBreakdown.contingency),
+      total: toNumber(trip.budgetBreakdown.total)
+    };
+  }
   const nights = Math.max(trip.days - 1, 1);
   const stay = ACCOMMODATION_RATES[prefs.accommodation] * nights;
   const transport = trip.days * 300;
@@ -556,6 +743,7 @@ function renderBudget(trip) {
       <span>🍽️ Food ₹${b.food.toLocaleString('en-IN')}</span>
       <span>🚕 Transport ₹${b.transport.toLocaleString('en-IN')}</span>
       <span>🎟️ Activities ₹${b.activities.toLocaleString('en-IN')}</span>
+      ${b.contingency ? `<span>🛟 Contingency ₹${b.contingency.toLocaleString('en-IN')}</span>` : ''}
     </div>
   `;
 }
@@ -761,14 +949,14 @@ function renderSavedPage() {
 function seedMyTripsIfEmpty() {
   const existing = loadJSON(STORE.MY_TRIPS, null);
   if (existing === null) {
-    saveJSON(STORE.MY_TRIPS, [
-      { id: 'trip_seed_jaipur', destKey: 'jaipur', label: 'Jaipur Heritage Walk', days: 3, budget: 22000, vegetarian: false, lowCrowds: false, pace: 'moderate', tags: 'Family Trip', historical: true }
-    ]);
+    saveJSON(STORE.MY_TRIPS, []);
+  } else if (existing.some(trip => trip.historical)) {
+    saveJSON(STORE.MY_TRIPS, existing.filter(trip => !trip.historical));
   }
 }
 
 function addToMyTrips(trip) {
-  const trips = loadJSON(STORE.MY_TRIPS, []);
+  const trips = loadJSON(STORE.MY_TRIPS, []).filter(item => item.id !== trip.id);
   trips.unshift({
     id: trip.id,
     destKey: trip.destKey,
@@ -799,16 +987,32 @@ function renderMyTripsPage() {
   `).join('') : emptyStateHTML('No trips yet', 'Plan a trip from Explore and it will show up here.');
 }
 
-function openMyTrip(id) {
+async function openMyTrip(id) {
   const record = loadJSON(STORE.MY_TRIPS, []).find(t => t.id === id);
   if (!record) return;
-  let trip = record.fullTrip;
-  if (!trip) {
-    trip = generateItinerary({ destKey: record.destKey, days: record.days, vegetarian: record.vegetarian, lowCrowds: record.lowCrowds, budget: record.budget, pace: record.pace || 'moderate' });
-    trip.id = record.id;
+  try {
+    const [result, versions] = await Promise.all([
+      apiRequest(`/trips/${encodeURIComponent(id)}`),
+      apiRequest(`/trips/${encodeURIComponent(id)}/versions`)
+    ]);
+    const context = {
+      destination: record.label.replace(/ Trip$/i, ''),
+      budget: record.budget,
+      vegetarian: record.vegetarian,
+      lowCrowds: record.lowCrowds,
+      pace: record.pace || 'moderate'
+    };
+    const trip = await enrichTripFromServices(itineraryFromApi(result, context), context);
+    displayItinerary(trip, { returnView: 'viewTrips' });
+    showToast(`✓ Trip loaded · ${versions.length} saved version${versions.length === 1 ? '' : 's'}`);
+  } catch (error) {
+    if (record.fullTrip) {
+      displayItinerary(record.fullTrip, { returnView: 'viewTrips' });
+      showToast('Backend unavailable; showing the locally cached trip.', 'error');
+    } else {
+      showToast(`Could not load trip: ${error.message}`, 'error');
+    }
   }
-  displayItinerary(trip, { returnView: 'viewTrips' });
-  showToast('✓ Trip loaded');
 }
 
 function deleteMyTrip(id) {
@@ -849,12 +1053,15 @@ function renderPreferencesPage() {
         ${INTEREST_OPTIONS.map(i => `<button type="button" class="pill ${prefs.interests.includes(i) ? 'active' : ''}" onclick="this.classList.toggle('active')">${i}</button>`).join('')}
       </div>
     </div>
-    <button class="neo-btn primary-btn" style="width: fit-content; margin-top: 10px;" onclick="savePreferencesFromForm()">Save Preferences</button>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+      <button class="neo-btn primary-btn" type="button" onclick="savePreferencesFromForm()">Save Preferences</button>
+      <button class="ghost-btn" type="button" onclick="resetPreferences()">Reset travel memory</button>
+    </div>
   `;
 }
 
-function savePreferencesFromForm() {
-  updatePreferences({
+async function savePreferencesFromForm() {
+  const updated = {
     vegetarian: document.getElementById('prefVeg').checked,
     luxuryFirst: document.getElementById('prefLuxury').checked,
     lowCrowds: document.getElementById('prefLowCrowds').checked,
@@ -862,13 +1069,71 @@ function savePreferencesFromForm() {
     pace: document.getElementById('prefPace').value,
     accommodation: document.getElementById('prefAccommodation').value,
     interests: Array.from(document.querySelectorAll('#interestPills .pill.active')).map(b => b.textContent)
-  });
+  };
+  updatePreferences(updated);
+  try {
+    await apiRequest(`/users/${encodeURIComponent(USER_ID)}/preferences`, {
+      method: 'PUT',
+      body: JSON.stringify(preferencesToApi(prefs))
+    });
+    showToast('✓ Preferences saved to your travel memory');
+  } catch (error) {
+    showToast(`Saved locally; server memory unavailable: ${error.message}`, 'error');
+  }
 }
 
 function updatePreferences(newPrefs) {
   prefs = { ...prefs, ...newPrefs };
   saveJSON(STORE.PREFS, prefs);
-  showToast('✓ Preferences updated');
+}
+
+function preferencesToApi(values) {
+  return {
+    interests: values.interests || [],
+    dietary: values.vegetarian ? ['vegetarian'] : [],
+    accessibility: values.accessibility || [],
+    excluded_categories: [],
+    pace: values.pace || 'moderate',
+    travel_mode: values.travelMode || 'drive',
+    crowd_tolerance: values.lowCrowds ? 3 : 7,
+    preferred_language: values.preferredLanguage || 'en'
+  };
+}
+
+function preferencesFromApi(values) {
+  return {
+    ...prefs,
+    interests: values.interests || prefs.interests,
+    vegetarian: (values.dietary || []).includes('vegetarian'),
+    lowCrowds: toNumber(values.crowd_tolerance, 5) <= 3,
+    pace: values.pace || prefs.pace,
+    accessibility: values.accessibility || [],
+    travelMode: values.travel_mode || 'drive',
+    preferredLanguage: values.preferred_language || 'en'
+  };
+}
+
+async function loadRemotePreferences() {
+  try {
+    const remote = await apiRequest(`/users/${encodeURIComponent(USER_ID)}/preferences`);
+    prefs = preferencesFromApi(remote);
+    saveJSON(STORE.PREFS, prefs);
+    renderPreferencesPage();
+  } catch (_) {
+    // A 404 is expected before the user's first generated trip or preference save.
+  }
+}
+
+async function resetPreferences() {
+  try {
+    await apiRequest(`/users/${encodeURIComponent(USER_ID)}/preferences`, { method: 'DELETE' });
+  } catch (error) {
+    if (!String(error.message).includes('404')) showToast(error.message, 'error');
+  }
+  prefs = { ...DEFAULT_PREFS };
+  saveJSON(STORE.PREFS, prefs);
+  renderPreferencesPage();
+  showToast('Travel memory and local preferences reset');
 }
 
 function replanItinerary(trip) {
@@ -883,41 +1148,50 @@ function replanItinerary(trip) {
   return null;
 }
 
-function triggerReplan() {
+async function triggerReplan() {
   if (!state.currentTrip) {
     showToast('Generate a trip first.', 'error');
     return;
   }
-  const target = replanItinerary(state.currentTrip);
-  if (!target) {
-    showToast('No weather-sensitive activities left to replan.', 'error');
-    return;
-  }
-  state.replanTarget = target;
-  const alts = INDOOR_ALTERNATIVES[state.currentTrip.destKey] || INDOOR_ALTERNATIVES.default;
+  const button = document.getElementById('replanBtn');
+  button.disabled = true;
+  button.textContent = 'Replanning…';
   document.getElementById('replanAlert').innerHTML = `
     <div class="alert-header">
-      <h3>⚠️ AI WEATHER UPDATE</h3>
-      <p>Rain expected this afternoon. I suggest swapping your outdoor plan for something indoors.</p>
-    </div>
-    <div class="compare-box">
-      <div class="compare-col original">
-        <span>Original</span>
-        <strike>${target.act.time} → ${target.act.title}</strike>
-      </div>
-      <div class="arrow">↓</div>
-      <div class="compare-col suggested">
-        <span>Suggested</span>
-        <strong>${target.act.time} → ${alts[0].title}</strong>
-      </div>
-    </div>
-    <div class="alert-actions">
-      <button class="neo-btn primary-btn" onclick="applyChanges(0)">Apply changes</button>
-      <button class="neo-btn secondary-btn" onclick="closeReplan()">Keep original</button>
+      <h3>✦ AGENTIC REPLANNING</h3>
+      <p>The planner is preserving locked activities and recalculating weather, routes, budget, and feasibility.</p>
     </div>
   `;
   document.getElementById('replanAlert').classList.remove('hidden');
   document.getElementById('viewItinerary').scrollTo({ top: 0, behavior: 'smooth' });
+  try {
+    const current = state.currentTrip;
+    const result = await apiRequest(`/trips/${encodeURIComponent(current.tripId)}/replan`, {
+      method: 'POST',
+      body: JSON.stringify({
+        reason: 'Re-evaluate this itinerary using the latest weather, route, budget, and knowledge information.',
+        locked_activity_ids: current.itinerary.flatMap(day => day.activities).filter(activity => activity.locked).map(activity => activity.id),
+        preference_changes: preferencesToApi(prefs)
+      })
+    });
+    const context = {
+      destination: current.destLabel,
+      budget: current.budget,
+      vegetarian: current.vegetarian,
+      lowCrowds: current.lowCrowds,
+      pace: current.pace
+    };
+    const replanned = await enrichTripFromServices(itineraryFromApi(result, context), context);
+    addToMyTrips(replanned);
+    displayItinerary(replanned, { returnView: state.returnView });
+    showToast(`✓ Itinerary updated to version ${replanned.version}`);
+  } catch (error) {
+    closeReplan();
+    showToast(`Could not replan: ${error.message}`, 'error');
+  } finally {
+    button.disabled = false;
+    button.textContent = '🌦️ Replan with AI';
+  }
 }
 
 function closeReplan() {
@@ -943,7 +1217,19 @@ function applyChanges(optionIndex) {
   state.replanTarget = null;
 }
 
-function init() {
+async function refreshServiceStatus() {
+  const tip = document.querySelector('#widgetTip .widget-body p');
+  try {
+    state.serviceStatus = await apiRequest('/status');
+    const models = state.serviceStatus.dependencies.models;
+    const provider = models.last_chat_provider || models.provider_order.find(name => models.providers[name] && models.providers[name].enabled) || 'offline';
+    tip.textContent = `Backend ready · ${state.serviceStatus.mode} travel data · ${provider} model route`;
+  } catch (_) {
+    tip.textContent = 'Backend offline — start FastAPI to plan trips.';
+  }
+}
+
+async function init() {
   seedMyTripsIfEmpty();
   renderPreferencesPage();
   renderSavedPage();
@@ -952,5 +1238,6 @@ function init() {
   document.getElementById('activityModal').addEventListener('click', (e) => {
     if (e.target.id === 'activityModal') closeActivityModal();
   });
+  await Promise.all([refreshServiceStatus(), loadRemotePreferences()]);
 }
 init();

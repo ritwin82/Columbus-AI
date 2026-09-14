@@ -14,6 +14,7 @@ from app.integrations.providers import (
 from app.orchestration.graph import TravelWorkflow
 from app.repositories.catalog import CatalogueRepository
 from app.repositories.hotels import HotelRepository
+from app.repositories.restaurants import RestaurantRepository
 from app.repositories.state import InMemoryTripRepository, SqlTripRepository, TripRepository
 from app.services.knowledge import KnowledgeService
 from app.services.llm import OllamaGateway
@@ -27,6 +28,7 @@ class Container:
     repository: TripRepository
     catalogue: CatalogueRepository
     hotels: HotelRepository
+    restaurants: RestaurantRepository
     llm: OllamaGateway
     trips: TravelPlannerService
     workflow: TravelWorkflow
@@ -42,6 +44,7 @@ def build_container(settings: Settings | None = None) -> Container:
     settings = settings or get_settings()
     catalogue = CatalogueRepository()
     hotels = HotelRepository()
+    restaurants = RestaurantRepository()
     repository: TripRepository = (
         SqlTripRepository(settings.postgres_url)
         if settings.persistence_backend == "postgres"
@@ -81,9 +84,11 @@ def build_container(settings: Settings | None = None) -> Container:
         llm=llm,
         knowledge=knowledge,
         hotels=hotels,
+        restaurants=restaurants,
     )
     workflow = TravelWorkflow(trips, settings.max_reflections)
     task_agents = TaskAgents(llm, settings)
     return Container(
-        settings, repository, catalogue, hotels, llm, trips, workflow, task_agents, knowledge
+        settings, repository, catalogue, hotels, restaurants, llm, trips, workflow,
+        task_agents, knowledge
     )

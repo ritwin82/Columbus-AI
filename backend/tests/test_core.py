@@ -6,6 +6,7 @@ from app.optimization.planner import build_day, calculate_budget, suitability_sc
 from app.rag.hybrid import HybridRetriever
 from app.rag.ingestion.pipeline import DocumentChunk, SourceDocument, chunk_document, extract
 from app.repositories.state import InMemoryTripRepository
+from app.services.trips import TravelPlannerService
 
 
 def place(identifier: str, *, indoor: bool = False, cost: str = "100") -> Place:
@@ -129,3 +130,20 @@ def test_repository_versions_and_deletes_memory() -> None:
     assert len(repository.versions(first.trip_id)) == 2
     assert repository.delete_preferences(request.user_id)
     assert repository.get_preferences(request.user_id) is None
+
+
+def test_llm_summary_must_match_structured_trip_facts() -> None:
+    request = TripRequest(
+        origin="Chennai",
+        destinations=["Chennai"],
+        start_date=date(2026, 1, 1),
+        days=2,
+        budget_inr=Decimal(15000),
+    )
+    assert TravelPlannerService._summary_is_consistent(
+        "A 2-day Chennai itinerary with heritage highlights.", request
+    )
+    assert not TravelPlannerService._summary_is_consistent(
+        "A 2-day Chennai itinerary completed in a single day with a restaurant stay.",
+        request,
+    )

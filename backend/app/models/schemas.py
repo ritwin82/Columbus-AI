@@ -74,6 +74,9 @@ class Place(BaseModel):
     dietary: list[str] = Field(default_factory=list)
     accessibility: list[str] = Field(default_factory=list)
     crowd_level: int = Field(default=5, ge=1, le=10)
+    rating: float | None = Field(default=None, ge=0, le=5)
+    user_rating_count: int | None = Field(default=None, ge=0)
+    rating_source: str = "unavailable"
     citations: list[Citation] = Field(default_factory=list)
     live_status: str = "unknown"
 
@@ -136,9 +139,27 @@ class Activity(BaseModel):
         return self
 
 
+class RestaurantRecommendation(BaseModel):
+    id: str
+    name: str
+    destination: str
+    area: str
+    cuisines: list[str] = Field(default_factory=list)
+    dietary: list[str] = Field(default_factory=list)
+    average_cost_for_two_inr: Decimal = Field(ge=0)
+    rating: float | None = Field(default=None, ge=0, le=5)
+    rating_source: str = "curated_snapshot"
+    source_note: str = "Approximate catalogue data; verify current price, rating, and availability."
+
+    @property
+    def estimated_meal_cost_per_person_inr(self) -> Decimal:
+        return (self.average_cost_for_two_inr / Decimal(2)).quantize(Decimal(1))
+
+
 class ItineraryDay(BaseModel):
     date: date
     activities: list[Activity] = Field(default_factory=list)
+    restaurant: RestaurantRecommendation | None = None
 
 
 class BudgetBreakdown(BaseModel):

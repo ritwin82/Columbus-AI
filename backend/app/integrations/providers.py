@@ -36,7 +36,7 @@ class GooglePlacesProvider:
                 "X-Goog-FieldMask": (
                     "places.id,places.displayName,places.formattedAddress,"
                     "places.location,places.types,places.currentOpeningHours,"
-                    "places.businessStatus"
+                    "places.businessStatus,places.rating,places.userRatingCount"
                 ),
             },
             json={"textQuery": f"{query} in {destination}", "languageCode": "en"},
@@ -52,6 +52,9 @@ class GooglePlacesProvider:
                 description=item.get("formattedAddress", ""),
                 latitude=item["location"]["latitude"],
                 longitude=item["location"]["longitude"],
+                rating=item.get("rating"),
+                user_rating_count=item.get("userRatingCount"),
+                rating_source="Google Places live",
                 live_status=item.get("businessStatus", "unknown").lower(),
                 citations=[
                     Citation(

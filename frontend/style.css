@@ -282,6 +282,20 @@ h1, h2, h3 { font-family: var(--font-display); }
   background: #FFF;
 }
 
+.planner-message {
+  margin-top: 16px;
+  padding: 16px 18px;
+  white-space: pre-line;
+  line-height: 1.55;
+  font-weight: 650;
+  background: var(--accent-yellow);
+}
+
+.planner-message.error {
+  background: #ffe3e3;
+  border-color: #a61b1b;
+}
+
 .auth-box {
   max-width: 400px;
   margin: 0 auto;
@@ -366,6 +380,30 @@ h1, h2, h3 { font-family: var(--font-display); }
 .back-btn { display: block; margin-bottom: 6px; font-size: 14px; }
 
 .budget-panel { padding: 18px 20px; margin-bottom: 24px; }
+.section-label { font-family: var(--font-display); font-weight: 700; font-size: 12px; letter-spacing: .12em; color: var(--primary); margin-bottom: 6px; }
+.ai-summary { padding: 18px 20px; margin-bottom: 24px; background: #fff9dc; }
+.ai-summary p { line-height: 1.7; }
+.route-panel { padding: 20px; margin-bottom: 24px; }
+.route-panel-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.route-panel-head h2 { font-size: 24px; }
+.map-day-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.map-day-tab { border: 2px solid var(--black); background: white; border-radius: 999px; padding: 7px 13px; font-family: var(--font-display); font-weight: 700; cursor: pointer; }
+.map-day-tab.active { background: var(--accent-blue); box-shadow: 3px 3px 0 var(--black); }
+.itinerary-map { height: 360px; border: var(--border-thick); border-radius: var(--radius-md); overflow: hidden; background: #e8f4f8; z-index: 0; }
+.route-totals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+.route-totals span { border: 2px solid var(--black); border-radius: var(--radius-sm); padding: 12px; background: #f7f7f7; text-align: center; font-size: 13px; }
+.route-totals strong { display: block; font-family: var(--font-display); font-size: 18px; margin-bottom: 3px; }
+.knowledge-panel { margin-bottom: 24px; overflow: hidden; }
+.knowledge-toggle { width: 100%; border: 0; background: var(--black); color: white; padding: 15px 18px; display: flex; justify-content: space-between; font-family: var(--font-display); font-weight: 700; font-size: 15px; cursor: pointer; }
+.knowledge-graph { padding: 20px; }
+.knowledge-graph.hidden { display: none; }
+.graph-canvas { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 22px; min-height: 260px; padding: 30px; border: 2px dashed var(--black); border-radius: var(--radius-md); background: #eefaf8; }
+.graph-hub, .graph-node { border: 2px solid var(--black); box-shadow: 3px 3px 0 var(--black); font-family: var(--font-display); font-weight: 700; text-align: center; }
+.graph-hub { background: var(--primary); color: white; border-radius: 50%; width: 110px; height: 110px; display: grid; place-items: center; }
+.graph-node { width: 150px; padding: 10px; border-radius: 10px; background: white; font-size: 12px; position: relative; }
+.graph-node::before { content: '→'; position: absolute; left: -17px; color: var(--primary); }
+.graph-node small { display: block; color: var(--text-muted); font-family: var(--font-body); font-weight: 400; margin-top: 4px; }
+.graph-legend { color: var(--text-muted); font-size: 13px; margin-top: 12px; }
 .budget-top { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-display); font-size: 18px; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
 .budget-status { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: #E6F9E6; border: 2px solid var(--black); }
 .budget-status.over { background: #FFE0E0; color: #D32F2F; }
@@ -457,6 +495,32 @@ h1, h2, h3 { font-family: var(--font-display); }
 .ai-tag { background: var(--primary); color: white; font-size: 11px; }
 
 .activity-actions { display: flex; gap: 6px; }
+
+.restaurant-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(180px, auto);
+  gap: 14px;
+  align-items: center;
+  margin: 16px 0 20px;
+  padding: 15px;
+  border: 2px solid var(--black);
+  border-radius: var(--radius-sm);
+  background: #fff8dc;
+  box-shadow: 3px 3px 0 var(--black);
+}
+
+.restaurant-card.unavailable { display: block; color: var(--text-muted); }
+.restaurant-icon { font-size: 28px; }
+.restaurant-card h4 { margin: 3px 0 5px; font-size: 17px; }
+.restaurant-card p { margin: 2px 0; color: var(--text-muted); font-size: 13px; }
+.restaurant-card small { color: var(--text-muted); }
+.restaurant-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: right;
+  font-size: 13px;
+}
 .icon-btn {
   background: #F5F5F5;
   border: 2px solid var(--black);
@@ -580,6 +644,45 @@ h1, h2, h3 { font-family: var(--font-display); }
   .content-area { padding: 20px; }
   .itinerary-header { flex-direction: column; align-items: flex-start; gap: 15px; }
   .activity { grid-template-columns: 1fr; }
+  .restaurant-card { grid-template-columns: 1fr; }
+  .restaurant-meta { text-align: left; }
   .activity-actions { justify-content: flex-start; margin-top: 8px; }
   .meta { align-items: flex-start; }
+}
+
+.hotel-panel {
+  margin-bottom: 22px;
+}
+
+.hotel-panel h2 {
+  margin: 6px 0 14px;
+}
+
+.hotel-recommendations,
+.knowledge-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.hotel-card,
+.knowledge-hit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 2px solid var(--black);
+  background: var(--white);
+  box-shadow: 3px 3px 0 var(--black);
+}
+
+.hotel-card span,
+.hotel-card small,
+.knowledge-hit p,
+.knowledge-hit small {
+  color: var(--text-muted);
+}
+
+.knowledge-results {
+  margin-top: 20px;
 }

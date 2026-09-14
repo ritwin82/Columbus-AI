@@ -225,6 +225,21 @@ class OllamaGateway:
         response = await self._openrouter_client.post(
             "/chat/completions", json=payload, headers=self._openrouter_headers()
         )
+        if (
+            response.status_code in {404, 408, 409, 429, 500, 502, 503, 504}
+            and model == self.settings.openrouter_task_model
+            and model != self.settings.openrouter_planner_model
+        ):
+            logger.warning(
+                "OpenRouter task model %s returned %s; retrying with %s",
+                model,
+                response.status_code,
+                self.settings.openrouter_planner_model,
+            )
+            payload["model"] = self.settings.openrouter_planner_model
+            response = await self._openrouter_client.post(
+                "/chat/completions", json=payload, headers=self._openrouter_headers()
+            )
         response.raise_for_status()
         return str(response.json()["choices"][0]["message"]["content"])
 

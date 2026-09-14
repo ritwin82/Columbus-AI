@@ -5,7 +5,7 @@ Agentic, multimodal travel intelligence for the Chennai–Mamallapuram–Puduche
 ## Repository layout
 
 - `backend/` — FastAPI application, LangGraph workflow, agents, RAG, integrations, and domain logic
-- `frontend/` — web client placeholder
+- `frontend/` — canonical browser client, served by FastAPI at `/`
 - `data/` — source registry and local ingestion areas (large/generated data is ignored)
 - `models/` — model configuration; model weights are not committed
 - `infra/` — local infrastructure configuration
@@ -48,7 +48,9 @@ See `docs/architecture.md` for component boundaries.
 - Static 50-property hotel catalogue with budget/accessibility filtering and itinerary recommendations
 - Travel-domain Neo4j graph whose dietary, accessibility, and seasonal relationships affect planner ranking
 
-The `frontend/` placeholder is intentionally not implemented.
+The browser client uses every public backend capability: model-backed intent extraction,
+trip generation, live weather, hotel search, hybrid knowledge retrieval, itinerary
+version retrieval, server-side replanning, preference memory, and service readiness.
 
 ## Quick start
 
@@ -101,9 +103,16 @@ The `frontend/` placeholder is intentionally not implemented.
    uvicorn app.main:app --reload
    ```
 
-Open `http://localhost:8000/docs` for the generated OpenAPI interface.
+Open `http://localhost:8000/` for the application or `http://localhost:8000/docs`
+for the generated OpenAPI interface. The frontend and API are served by the same
+FastAPI process, so a separate frontend development server is not required.
 
-By default, `USE_MOCK_PROVIDERS=true`, so itinerary generation works without Google Maps or OpenWeather keys. Set it to `false` after supplying those API keys. `ENABLE_LOCAL_MODELS` controls whether Ollama participates in model routing; Google AI and OpenRouter activate when their keys are present. Set `PERSISTENCE_BACKEND=postgres` to use PostgreSQL instead of ephemeral memory.
+The checked `.env.example` enables live travel providers and local-model fallback.
+Supply the Google Maps, OpenWeather, and OpenRouter keys before using that mode.
+`MODEL_PROVIDER_ORDER=openrouter,google,ollama` makes OpenRouter primary; Ollama is
+attempted when the cloud providers fail and `ENABLE_LOCAL_MODELS=true`. Set
+`USE_MOCK_PROVIDERS=true` only for offline demos. Set `PERSISTENCE_BACKEND=postgres`
+to use PostgreSQL instead of ephemeral memory.
 
 `RAG_MODE=local` uses the generated corpus with in-process BM25 and, when any model provider is configured, cosine semantic search. Set `RAG_MODE=hybrid` after Qdrant, OpenSearch, and Neo4j are running and `scripts/build_indexes.py` has completed. Hybrid mode fuses local BM25, OpenSearch, Qdrant embeddings, and Neo4j graph matches; an unavailable Qdrant channel falls back to in-process semantic search and every other unavailable channel degrades independently. Re-run `scripts/build_indexes.py` after changing embedding providers so Qdrant is rebuilt with the correct vector dimension.
 

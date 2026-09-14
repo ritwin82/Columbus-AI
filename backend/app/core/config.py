@@ -3,6 +3,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -51,11 +52,18 @@ class Settings(BaseSettings):
 
     google_maps_api_key: str = ""
     openweather_api_key: str = ""
-    enable_local_models: bool = False
+    enable_local_models: bool = True
     use_mock_providers: bool = True
     persistence_backend: str = "memory"
     max_reflections: int = 3
     request_timeout_seconds: float = 20
+
+    @field_validator("rag_chunks_path", mode="after")
+    @classmethod
+    def resolve_rag_chunks_path(cls, value: Path) -> Path:
+        if value.is_absolute():
+            return value
+        return Path(__file__).resolve().parents[3] / value
 
     @property
     def ai_models_enabled(self) -> bool:

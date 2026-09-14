@@ -78,15 +78,16 @@
           </div>
 
           <form id="tripForm" class="input-area neo-panel-inner">
-            <textarea id="tripInput" rows="3" placeholder='e.g. "Plan me a 4-day Goa trip with beaches, vegetarian food, low crowds and a ₹15,000 budget."'></textarea>
+            <textarea id="tripInput" rows="3" placeholder='e.g. "Plan a 4-day Chennai, Mamallapuram and Puducherry trip with vegetarian food, heritage sites and a ₹25,000 budget."'></textarea>
             <div class="input-actions">
               <div class="suggestions">
-                <button type="button" class="pill" onclick="fillPrompt(this)">🏖️ 4 days in Goa, veg, low crowds</button>
-                <button type="button" class="pill" onclick="fillPrompt(this)">🏔️ Manali weekend trek</button>
+                <button type="button" class="pill" onclick="fillPrompt(this)">🏖️ 4 days in Chennai, Mamallapuram and Puducherry, veg, low crowds, ₹25,000</button>
+                <button type="button" class="pill" onclick="fillPrompt(this)">🏛️ Puducherry weekend, heritage and food, ₹15,000</button>
               </div>
               <button type="submit" class="primary-btn neo-btn" id="planTripBtn">PLAN MY TRIP ➔</button>
             </div>
           </form>
+          <div id="plannerMessage" class="planner-message neo-panel-inner hidden" role="status" aria-live="polite"></div>
         </div>
 
         <div id="viewAuth" class="view-section">
@@ -119,7 +120,7 @@
             </div>
             <div class="header-actions">
               <button class="neo-btn secondary-btn" id="saveTripBtn" onclick="toggleSave()">🤍 Save Trip</button>
-              <button class="neo-btn secondary-btn" onclick="triggerReplan()">🌦️ Sim Weather AI</button>
+              <button class="neo-btn secondary-btn" id="replanBtn" onclick="triggerReplan()">🌦️ Replan with AI</button>
             </div>
           </div>
 
@@ -147,6 +148,12 @@
               <span>◎ View knowledge graph output</span><span id="knowledgeArrow">↓</span>
             </button>
             <div id="knowledgeGraph" class="knowledge-graph hidden"></div>
+          </section>
+
+          <section class="hotel-panel neo-panel-inner" aria-labelledby="hotelTitle">
+            <div class="section-label">STAY OPTIONS</div>
+            <h2 id="hotelTitle">Budget-matched hotels</h2>
+            <div id="hotelRecommendations" class="hotel-recommendations"></div>
           </section>
 
           <div id="replanAlert" class="replan-alert neo-panel-inner hidden"></div>

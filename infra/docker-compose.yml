@@ -3,7 +3,10 @@ name: travelmind
 services:
   api:
     build:
-      context: ../backend
+      context: ..
+      dockerfile: backend/Dockerfile
+    env_file:
+      - ../.env
     environment:
       APP_ENV: development
       PERSISTENCE_BACKEND: postgres
@@ -17,7 +20,7 @@ services:
       OLLAMA_BASE_URL: http://host.docker.internal:11434
       RAG_MODE: hybrid
       RAG_CHUNKS_PATH: /data/chunks/chunks.jsonl
-      USE_MOCK_PROVIDERS: "true"
+      USE_MOCK_PROVIDERS: "false"
     ports: ["8000:8000"]
     volumes: ["../data:/data:ro"]
     depends_on:

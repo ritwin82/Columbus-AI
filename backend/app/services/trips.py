@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -26,6 +27,7 @@ from app.optimization.planner import (
 )
 from app.repositories.catalog import CatalogueRepository
 from app.repositories.hotels import HotelRepository
+from app.repositories.restaurants import RestaurantRepository
 from app.repositories.state import TripRepository
 from app.services.llm import ModelUnavailable, OllamaGateway
 
@@ -35,6 +37,14 @@ if TYPE_CHECKING:
 
 class TripNotFound(KeyError):
     pass
+
+
+class TripPlanningError(ValueError):
+    def __init__(self, message: str, *, reasons: list[str], suggestions: list[str]) -> None:
+        super().__init__(message)
+        self.message = message
+        self.reasons = reasons
+        self.suggestions = suggestions
 
 
 class TravelPlannerService:
@@ -50,6 +60,7 @@ class TravelPlannerService:
         llm: OllamaGateway | None = None,
         knowledge: KnowledgeService | None = None,
         hotels: HotelRepository | None = None,
+        restaurants: RestaurantRepository | None = None,
     ) -> None:
         self.settings = settings
         self.catalogue = catalogue
@@ -61,6 +72,7 @@ class TravelPlannerService:
         self.llm = llm
         self.knowledge = knowledge
         self.hotels = hotels
+        self.restaurants = restaurants
 
     async def generate(self, request: TripRequest) -> Itinerary:
         itinerary = await self._build(request, version=1, locked={})
@@ -109,18 +121,44 @@ class TravelPlannerService:
         trip_id: UUID | None = None,
         change_reason: str = "",
     ) -> Itinerary:
+        supported = {place.destination.casefold(): place.destination for place in self.catalogue.all()}
+        unsupported = [name for name in request.destinations if name.casefold() not in supported]
+        if unsupported:
+            raise TripPlanningError(
+                "I cannot build a reliable itinerary for the requested destination yet.",
+                reasons=[
+                    f"{name} is outside the current verified catalogue."
+                    for name in unsupported
+                ],
+                suggestions=[
+                    "Choose Chennai, Mamallapuram, or Puducherry.",
+                    "Add verified catalogue data for the destination before planning it.",
+                ],
+            )
         dates = [request.start_date + timedelta(days=index) for index in range(request.days)]
         locked_by_date: dict = {}
         for activity in locked.values():
             locked_by_date.setdefault(activity.start_at.date(), []).append(activity)
 
         all_candidates = self.catalogue.destinations(request.destinations)
+        food_per_person = max(
+            Decimal(300),
+            min(
+                Decimal(900),
+                request.budget_inr * Decimal("0.20") / request.travellers / request.days,
+            ),
+        ).quantize(Decimal(1))
         knowledge_hits = []
         if self.knowledge:
             query = " ".join([*request.destinations, *request.preferences.interests])
             knowledge_hits = await self.knowledge.search(query, limit=20)
         days: list[ItineraryDay] = []
         forecasts = []
+        used_place_ids = {activity.place.id for activity in locked.values()}
+        used_place_names = {
+            self._normalise_name(activity.place.name) for activity in locked.values()
+        }
+        used_restaurant_ids: set[str] = set()
         for index, date_value in enumerate(dates):
             destination = request.destinations[index % len(request.destinations)]
             candidates = [p for p in all_candidates if p.destination.casefold() == destination.casefold()]
@@ -143,13 +181,33 @@ class TravelPlannerService:
                 )
                 if match:
                     match.live_status = live_place.live_status
+                    match.rating = live_place.rating or match.rating
+                    match.user_rating_count = (
+                        live_place.user_rating_count or match.user_rating_count
+                    )
+                    if live_place.rating is not None:
+                        match.rating_source = live_place.rating_source
                     match.citations.extend(live_place.citations)
                     merged[match.id] = match
                 else:
                     merged[live_place.id] = live_place
-            candidates = list(merged.values())
+            candidates = [
+                place for place in merged.values()
+                if place.id not in used_place_ids
+                and self._normalise_name(place.name) not in used_place_names
+            ]
             if not candidates:
-                days.append(ItineraryDay(date=date_value))
+                day = ItineraryDay(date=date_value)
+                if self.restaurants:
+                    day.restaurant = self.restaurants.recommend(
+                        destination,
+                        dietary=request.preferences.dietary,
+                        target_cost_for_two_inr=food_per_person * 2,
+                        excluded_ids=used_restaurant_ids,
+                    )
+                    if day.restaurant:
+                        used_restaurant_ids.add(day.restaurant.id)
+                days.append(day)
                 continue
 
             if index == 0:
@@ -184,7 +242,21 @@ class TravelPlannerService:
                         known_sources.add(key)
                 if place.id in request.mandatory_place_ids:
                     scores[place_index] += 100
-            max_places = {"relaxed": 2, "moderate": 3, "packed": 4}[request.preferences.pace.value]
+            future_visits = sum(
+                1
+                for future in request.destinations[index + 1:]
+                if future.casefold() == destination.casefold()
+            )
+            future_visits += sum(
+                1
+                for future_index in range(index + len(request.destinations), request.days)
+                if request.destinations[future_index % len(request.destinations)].casefold()
+                == destination.casefold()
+            )
+            pace_limit = {"relaxed": 2, "moderate": 3, "packed": 4}[
+                request.preferences.pace.value
+            ]
+            max_places = min(pace_limit, max(1, len(candidates) - future_visits))
             order = optimize_order(matrix, scores, max_places)
             day = build_day(
                 date_value=date_value,
@@ -204,12 +276,31 @@ class TravelPlannerService:
                     ):
                         locked_for_day.append(addition)
                 day.activities = sorted(locked_for_day, key=lambda item: item.start_at)
+            for activity in day.activities:
+                used_place_ids.add(activity.place.id)
+                used_place_names.add(self._normalise_name(activity.place.name))
+            if self.restaurants:
+                day.restaurant = self.restaurants.recommend(
+                    destination,
+                    dietary=request.preferences.dietary,
+                    target_cost_for_two_inr=food_per_person * 2,
+                    excluded_ids=used_restaurant_ids,
+                )
+                if day.restaurant:
+                    used_restaurant_ids.add(day.restaurant.id)
             days.append(day)
 
-        food_per_person = max(
-            Decimal(300),
-            min(Decimal(900), request.budget_inr * Decimal("0.20") / request.travellers / request.days),
-        ).quantize(Decimal(1))
+        empty_days = [day.date.isoformat() for day in days if not day.activities]
+        if empty_days:
+            raise TripPlanningError(
+                "There are not enough unique verified attractions to fill every requested day without repeats.",
+                reasons=[f"No unused feasible attraction was available for {value}." for value in empty_days],
+                suggestions=[
+                    "Shorten the trip or include another supported destination.",
+                    "Enable Google Places so the planner can use a larger live candidate set.",
+                    "Choose a more relaxed schedule with fewer attraction requirements.",
+                ],
+            )
         nights = max(0, request.days - 1)
         hotel_target = max(
             Decimal(1000),
@@ -246,7 +337,15 @@ class TravelPlannerService:
             limit=request.budget_inr,
             travellers=request.travellers,
             daily_food_per_person=food_per_person,
+            daily_food_costs_per_person=[
+                max(
+                    food_per_person,
+                    day.restaurant.estimated_meal_cost_per_person_inr,
+                ) if day.restaurant else food_per_person
+                for day in days
+            ],
             accommodation_per_night=hotel_per_night,
+            travel_mode=request.preferences.travel_mode,
         )
         violations = validate(days, budget, forecasts)
         citations = []
@@ -271,7 +370,9 @@ class TravelPlannerService:
                     ),
                     prompt=f"Request: {request.model_dump_json()}\nDays: {[d.model_dump(mode='json') for d in days]}",
                 )
-                summary = str(generated)
+                candidate_summary = str(generated).strip()
+                if self._summary_is_consistent(candidate_summary, request):
+                    summary = candidate_summary
             except ModelUnavailable:
                 pass
         return Itinerary(
@@ -293,6 +394,24 @@ class TravelPlannerService:
         count = sum(len(day.activities) for day in days)
         base = f"A {request.preferences.pace.value} itinerary with {count} scheduled activities."
         return f"{base} Replanned because: {reason}" if reason else base
+
+    @staticmethod
+    def _normalise_name(value: str) -> str:
+        return "".join(character for character in value.casefold() if character.isalnum())
+
+    @staticmethod
+    def _summary_is_consistent(summary: str, request: TripRequest) -> bool:
+        lower = summary.casefold()
+        day_pattern = rf"\b{request.days}\s*[- ]?days?\b"
+        if not re.search(day_pattern, lower):
+            return False
+        if request.days != 1 and re.search(r"\b(?:single|one)\s+day\b", lower):
+            return False
+        if any(destination.casefold() not in lower for destination in request.destinations):
+            return False
+        if any(phrase in lower for phrase in ("restaurant stay", "hotel restaurant stay")):
+            return False
+        return len(summary) <= 1200
 
     @staticmethod
     def _negotiation_options(violations) -> list[str]:

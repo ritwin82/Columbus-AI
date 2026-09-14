@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, time, timedelta
 from decimal import Decimal
+from itertools import pairwise
+from math import asin, cos, radians, sin, sqrt
 
 from app.integrations.providers import route_leg
 from app.models.schemas import (
@@ -113,18 +115,47 @@ def calculate_budget(
     limit: Decimal,
     travellers: int,
     daily_food_per_person: Decimal = Decimal(900),
+    daily_food_costs_per_person: list[Decimal] | None = None,
     accommodation_per_night: Decimal = Decimal(2500),
+    travel_mode: TravelMode = TravelMode.DRIVE,
 ) -> BudgetBreakdown:
     attractions = sum(
         (activity.estimated_cost_inr for day in days for activity in day.activities),
         Decimal(0),
     ) * travellers
-    food = daily_food_per_person * travellers * len(days)
+    daily_food = daily_food_costs_per_person or [daily_food_per_person for _ in days]
+    food = sum(daily_food, Decimal(0)) * travellers
     accommodation = accommodation_per_night * max(0, len(days) - 1)
-    transport = sum(
-        (Decimal(str(activity.route_from_previous.distance_km * 18))
-         for day in days for activity in day.activities if activity.route_from_previous),
+    routed_km = sum(
+        (
+            Decimal(str(activity.route_from_previous.distance_km))
+            for day in days
+            for activity in day.activities
+            if activity.route_from_previous
+        ),
         Decimal(0),
+    )
+    transfer_km = Decimal(0)
+    populated_days = [day for day in days if day.activities]
+    for previous, current in pairwise(populated_days):
+        left = previous.activities[-1].place
+        right = current.activities[0].place
+        transfer_km += Decimal(str(_road_distance_km(left, right)))
+    cost_per_km = {
+        TravelMode.WALK: Decimal(0),
+        TravelMode.TRANSIT: Decimal(3),
+        TravelMode.DRIVE: Decimal(18),
+        TravelMode.TWO_WHEELER: Decimal(7),
+    }[TravelMode(travel_mode)]
+    passenger_factor = travellers if TravelMode(travel_mode) == TravelMode.TRANSIT else 1
+    local_access = {
+        TravelMode.WALK: Decimal(0),
+        TravelMode.TRANSIT: Decimal(80),
+        TravelMode.DRIVE: Decimal(180),
+        TravelMode.TWO_WHEELER: Decimal(90),
+    }[TravelMode(travel_mode)] * len(populated_days) * passenger_factor
+    transport = (
+        (routed_km + transfer_km) * cost_per_km * passenger_factor + local_access
     ).quantize(Decimal(1))
     subtotal = attractions + food + accommodation + transport
     contingency = (subtotal * Decimal("0.10")).quantize(Decimal(1))
@@ -137,6 +168,18 @@ def calculate_budget(
         total=subtotal + contingency,
         limit=limit,
     )
+
+
+def _road_distance_km(left: Place, right: Place) -> float:
+    """Approximate road distance from coordinates using a conservative road factor."""
+    earth_radius_km = 6371.0
+    lat1, lon1 = radians(left.latitude), radians(left.longitude)
+    lat2, lon2 = radians(right.latitude), radians(right.longitude)
+    delta_lat = lat2 - lat1
+    delta_lon = lon2 - lon1
+    value = sin(delta_lat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(delta_lon / 2) ** 2
+    straight_line = 2 * earth_radius_km * asin(sqrt(value))
+    return straight_line * 1.2
 
 
 def weather_risk(place: Place, forecasts: list[WeatherWindow], start_at: datetime) -> str | None:

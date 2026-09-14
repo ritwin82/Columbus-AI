@@ -17,7 +17,7 @@ from app.models.schemas import (
     WeatherWindow,
 )
 from app.services.knowledge import KnowledgeHit
-from app.services.trips import TripNotFound
+from app.services.trips import TripNotFound, TripPlanningError
 
 api_router = APIRouter()
 
@@ -44,7 +44,18 @@ async def service_status(request: Request) -> dict:
 
 @api_router.post("/trips/generate", response_model=Itinerary, status_code=status.HTTP_201_CREATED)
 async def generate_trip(payload: TripRequest, request: Request) -> Itinerary:
-    return await container(request).workflow.run(payload)
+    try:
+        itinerary = await container(request).workflow.run(payload)
+    except TripPlanningError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail={
+                "message": exc.message,
+                "reasons": exc.reasons,
+                "suggestions": exc.suggestions,
+            },
+        ) from exc
+    return _ensure_feasible(itinerary)
 
 
 @api_router.post("/intent", response_model=IntentResult)
@@ -105,9 +116,34 @@ async def trip_versions(trip_id: UUID, request: Request) -> list[Itinerary]:
 @api_router.post("/trips/{trip_id}/replan", response_model=Itinerary)
 async def replan_trip(trip_id: UUID, payload: ReplanRequest, request: Request) -> Itinerary:
     try:
-        return await container(request).trips.replan(trip_id, payload)
+        return _ensure_feasible(await container(request).trips.replan(trip_id, payload))
     except TripNotFound as exc:
         raise HTTPException(status_code=404, detail="Trip not found") from exc
+    except TripPlanningError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail={
+                "message": exc.message,
+                "reasons": exc.reasons,
+                "suggestions": exc.suggestions,
+            },
+        ) from exc
+
+
+def _ensure_feasible(itinerary: Itinerary) -> Itinerary:
+    errors = [item for item in itinerary.violations if item.severity == "error"]
+    if not errors:
+        return itinerary
+    raise HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        detail={
+            "message": "I could not create a feasible trip with all of the current constraints.",
+            "reasons": [item.message for item in errors],
+            "suggestions": itinerary.negotiation_options or [
+                "Increase the budget, shorten the trip, or relax one preference and try again."
+            ],
+        },
+    )
 
 
 @api_router.get("/users/{user_id}/preferences", response_model=Preferences)
@@ -116,6 +152,14 @@ async def get_preferences(user_id: str, request: Request) -> Preferences:
     if not result:
         raise HTTPException(status_code=404, detail="Preferences not found")
     return result
+
+
+@api_router.put("/users/{user_id}/preferences", response_model=Preferences)
+async def put_preferences(
+    user_id: str, payload: Preferences, request: Request
+) -> Preferences:
+    container(request).repository.save_preferences(user_id, payload)
+    return payload
 
 
 @api_router.delete("/users/{user_id}/preferences", status_code=status.HTTP_204_NO_CONTENT)
