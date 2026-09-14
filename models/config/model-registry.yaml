@@ -1,11 +1,15 @@
 planner:
-  provider: ollama
+  providers: [ollama, openrouter, google]
   model: gemma3:12b
+  openrouter_model: google/gemma-3-12b-it
+  google_model: gemma-4-26b-a4b-it
   role: itinerary_generation_and_reflection
 
 task_slm:
-  provider: ollama
+  providers: [ollama, openrouter, google]
   model: gemma3:4b
+  openrouter_model: google/gemma-3-4b-it
+  google_model: gemma-4-26b-a4b-it
   role: extraction_classification_summarization
 
 chat_fallback:
@@ -14,8 +18,10 @@ chat_fallback:
   role: temporary_fallback_when_configured_gemma_models_are_unavailable
 
 embedding:
-  provider: ollama
+  providers: [ollama, openrouter, google]
   model: bge-m3
+  openrouter_model: baai/bge-m3
+  google_model: gemini-embedding-001
 
 embedding_fallback:
   provider: ollama

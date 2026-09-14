@@ -42,7 +42,8 @@ class TaskAgents:
         self.settings = settings
 
     async def extract_intent(self, text: str) -> IntentResult:
-        if self.settings.enable_local_models:
+        fallback = self._fallback_intent(text)
+        if self.settings.ai_models_enabled:
             try:
                 result = await self.gateway.chat(
                     model=self.settings.task_model,
@@ -54,10 +55,31 @@ class TaskAgents:
                     prompt=text,
                 )
                 assert isinstance(result, IntentResult)
+                if not result.destinations:
+                    result.destinations = fallback.destinations
+                if result.days is None:
+                    result.days = fallback.days
+                if result.budget_inr is None:
+                    result.budget_inr = fallback.budget_inr
+                if not result.interests:
+                    result.interests = fallback.interests
+                if not result.dietary:
+                    result.dietary = fallback.dietary
+                if not result.accessibility:
+                    result.accessibility = fallback.accessibility
+                result.missing_required_fields = [
+                    field
+                    for field, value in (
+                        ("destinations", result.destinations),
+                        ("days", result.days),
+                        ("budget_inr", result.budget_inr),
+                    )
+                    if not value
+                ]
                 return result
             except (ModelUnavailable, ValueError):
                 pass
-        return self._fallback_intent(text)
+        return fallback
 
     async def summarize_reviews(self, reviews: list[str]) -> ReviewSummary:
         if not reviews:

@@ -34,7 +34,7 @@ See `docs/architecture.md` for component boundaries.
 ## Implemented backend capabilities
 
 - Typed trip, place, itinerary, citation, weather, budget, and validation contracts
-- Local Ollama gateway with schema-constrained responses plus automatic chat and embedding fallbacks
+- Resilient Ollama, OpenRouter, and Google AI gateway with structured-output and embedding fallbacks
 - Tamil/English/mixed-language intent and preference extraction with an offline fallback
 - HTML/PDF/CSV ingestion, cleaning, provenance retention, and topic-aware chunking
 - Hybrid retrieval core with BM25-style lexical search, reciprocal-rank fusion, and reranking hook
@@ -53,7 +53,8 @@ The `frontend/` placeholder is intentionally not implemented.
 ## Quick start
 
 1. Copy `.env.example` to `.env`.
-2. Install Ollama and pull the models:
+2. Choose local models, cloud models, or both. For local inference, install Ollama
+   and pull the models:
 
    ```powershell
    ollama pull gemma3:12b
@@ -66,6 +67,20 @@ The `frontend/` placeholder is intentionally not implemented.
    ```powershell
    .\scripts\setup_ollama.ps1 -PullModels
    ```
+
+   To run without waiting for downloads, configure one or both cloud keys in
+   `.env`:
+
+   ```dotenv
+   MODEL_PROVIDER_ORDER=openrouter,google,ollama
+   OPENROUTER_API_KEY=your-key
+   GOOGLE_AI_API_KEY=your-key
+   ```
+
+   OpenRouter uses the exact cloud equivalents `google/gemma-3-12b-it`,
+   `google/gemma-3-4b-it`, and `baai/bge-m3`. Google's direct API currently uses
+   hosted Gemma 4 for chat and `gemini-embedding-001` for embeddings. Keys are
+   optional, and the first available provider in `MODEL_PROVIDER_ORDER` is used.
 
 3. Create and activate a Python 3.11+ virtual environment.
 4. Install the backend:
@@ -88,9 +103,9 @@ The `frontend/` placeholder is intentionally not implemented.
 
 Open `http://localhost:8000/docs` for the generated OpenAPI interface.
 
-By default, `USE_MOCK_PROVIDERS=true`, so itinerary generation works without Google or OpenWeather keys. Set it to `false` after supplying API keys. `ENABLE_LOCAL_MODELS` controls Ollama independently from external APIs. Set `PERSISTENCE_BACKEND=postgres` to use PostgreSQL instead of ephemeral memory.
+By default, `USE_MOCK_PROVIDERS=true`, so itinerary generation works without Google Maps or OpenWeather keys. Set it to `false` after supplying those API keys. `ENABLE_LOCAL_MODELS` controls whether Ollama participates in model routing; Google AI and OpenRouter activate when their keys are present. Set `PERSISTENCE_BACKEND=postgres` to use PostgreSQL instead of ephemeral memory.
 
-`RAG_MODE=local` uses the generated corpus with in-process BM25 and, when local models are enabled, Ollama cosine semantic search. Set `RAG_MODE=hybrid` after Qdrant, OpenSearch, and Neo4j are running and `scripts/build_indexes.py` has completed. Hybrid mode fuses local BM25, OpenSearch, Qdrant embeddings, and Neo4j graph matches; an unavailable Qdrant channel falls back to local semantic search and every other unavailable channel degrades independently.
+`RAG_MODE=local` uses the generated corpus with in-process BM25 and, when any model provider is configured, cosine semantic search. Set `RAG_MODE=hybrid` after Qdrant, OpenSearch, and Neo4j are running and `scripts/build_indexes.py` has completed. Hybrid mode fuses local BM25, OpenSearch, Qdrant embeddings, and Neo4j graph matches; an unavailable Qdrant channel falls back to in-process semantic search and every other unavailable channel degrades independently. Re-run `scripts/build_indexes.py` after changing embedding providers so Qdrant is rebuilt with the correct vector dimension.
 
 ## API highlights
 

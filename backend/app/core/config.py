@@ -21,6 +21,18 @@ class Settings(BaseSettings):
     fallback_chat_model: str = "qwen2.5-coder:3b"
     embedding_model: str = "bge-m3"
     fallback_embedding_model: str = "all-minilm"
+    model_provider_order: str = "openrouter,google,ollama"
+    google_ai_api_key: str = ""
+    google_planner_model: str = "gemma-4-26b-a4b-it"
+    google_task_model: str = "gemma-4-26b-a4b-it"
+    google_embedding_model: str = "gemini-embedding-001"
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    openrouter_planner_model: str = "google/gemma-3-12b-it"
+    openrouter_task_model: str = "google/gemma-3-4b-it"
+    openrouter_embedding_model: str = "baai/bge-m3"
+    openrouter_app_name: str = "TravelMind AI"
+    openrouter_site_url: str = ""
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
     enable_local_reranker: bool = False
     rag_mode: str = "local"
@@ -44,6 +56,23 @@ class Settings(BaseSettings):
     persistence_backend: str = "memory"
     max_reflections: int = 3
     request_timeout_seconds: float = 20
+
+    @property
+    def ai_models_enabled(self) -> bool:
+        return bool(
+            self.enable_local_models
+            or self.google_ai_api_key
+            or self.openrouter_api_key
+        )
+
+    @property
+    def providers(self) -> list[str]:
+        allowed = {"ollama", "google", "openrouter"}
+        return [
+            item
+            for value in self.model_provider_order.split(",")
+            if (item := value.strip().casefold()) in allowed
+        ]
 
 
 @lru_cache

@@ -261,7 +261,7 @@ class TravelPlannerService:
         confidence = min(0.95, 0.5 + len(citations) * 0.05)
         title = f"{request.days}-day {'–'.join(request.destinations)} itinerary"
         summary = self._template_summary(request, days, change_reason)
-        if self.llm and self.settings.enable_local_models:
+        if self.llm and self.settings.ai_models_enabled:
             try:
                 generated = await self.llm.chat(
                     model=self.settings.planner_model,

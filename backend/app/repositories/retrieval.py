@@ -34,6 +34,13 @@ class QdrantIndex:
         vectors = await self.embeddings.embed([chunk.content for chunk in chunks])
         collections = await self.client.get_collections()
         names = {item.name for item in collections.collections}
+        if self.collection in names:
+            info = await self.client.get_collection(self.collection)
+            configured_vectors = info.config.params.vectors
+            configured_size = getattr(configured_vectors, "size", None)
+            if configured_size != len(vectors[0]):
+                await self.client.delete_collection(self.collection)
+                names.remove(self.collection)
         if self.collection not in names:
             await self.client.create_collection(
                 collection_name=self.collection,

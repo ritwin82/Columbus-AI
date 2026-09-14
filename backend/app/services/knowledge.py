@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import math
 from datetime import UTC, datetime
 from pathlib import Path
@@ -18,6 +19,8 @@ from app.rag.ingestion.pipeline import DocumentChunk
 from app.repositories.catalog import CatalogueRepository
 from app.repositories.retrieval import Neo4jKnowledgeGraph, OpenSearchIndex, QdrantIndex
 from app.services.llm import OllamaGateway
+
+logger = logging.getLogger(__name__)
 
 
 class KnowledgeHit(BaseModel):
@@ -75,7 +78,7 @@ class KnowledgeService:
             self.channel_health.update(
                 {"vector": "configured", "opensearch": "configured", "graph": "configured"}
             )
-        elif mode == "local" and settings.enable_local_models:
+        elif mode == "local" and settings.ai_models_enabled:
             vector_search = self._local_vector_search
             self.channel_health["vector"] = "configured:local"
 
@@ -135,7 +138,8 @@ class KnowledgeService:
             return results
         except Exception as exc:  # noqa: BLE001 - optional provider boundary
             self.channel_health["vector"] = f"unavailable:{type(exc).__name__}"
-            if self.settings.enable_local_models:
+            logger.warning("Qdrant vector search failed: %s", exc)
+            if self.settings.ai_models_enabled:
                 results = await self._local_vector_search(query, limit)
                 if results:
                     self.channel_health["vector"] = "ready:local-fallback"

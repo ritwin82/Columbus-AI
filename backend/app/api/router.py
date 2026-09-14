@@ -8,7 +8,14 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from app.agents.tasks import IntentResult, NaturalLanguageQuery
 from app.core.container import Container
-from app.models.schemas import Hotel, Itinerary, Preferences, ReplanRequest, TripRequest
+from app.models.schemas import (
+    Hotel,
+    Itinerary,
+    Preferences,
+    ReplanRequest,
+    TripRequest,
+    WeatherWindow,
+)
 from app.services.knowledge import KnowledgeHit
 from app.services.trips import TripNotFound
 
@@ -21,8 +28,10 @@ def container(request: Request) -> Container:
 
 @api_router.get("/status", tags=["system"])
 async def service_status(request: Request) -> dict:
+    model_status = await container(request).llm.readiness()
     dependencies = {
-        "ollama": await container(request).llm.readiness(),
+        "models": model_status,
+        "ollama": model_status["providers"]["ollama"],
         "knowledge": container(request).knowledge.status(),
     }
     return {
@@ -68,6 +77,16 @@ async def search_hotels(
         accessibility=accessibility,
         limit=limit,
     )
+
+
+@api_router.get("/weather", response_model=list[WeatherWindow], tags=["travel"])
+async def weather_forecast(
+    request: Request,
+    latitude: float = Query(ge=-90, le=90),
+    longitude: float = Query(ge=-180, le=180),
+) -> list[WeatherWindow]:
+    """Return the configured OpenWeather forecast without exposing its API key."""
+    return await container(request).trips.weather.forecast(latitude, longitude)
 
 
 @api_router.get("/trips/{trip_id}", response_model=Itinerary)

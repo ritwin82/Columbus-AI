@@ -29,7 +29,14 @@ async def test_ollama_gateway_models_chat_and_embeddings() -> None:
             return httpx.Response(404, json={"error": "model not found"})
         return httpx.Response(200, json={"message": {"content": '{"value":"ok"}'}})
 
-    gateway = OllamaGateway(Settings())
+    gateway = OllamaGateway(
+        Settings(
+            enable_local_models=True,
+            model_provider_order="ollama",
+            openrouter_api_key="",
+            google_ai_api_key="",
+        )
+    )
     await gateway._client.aclose()
     gateway._client = httpx.AsyncClient(
         base_url="http://ollama.test", transport=httpx.MockTransport(handler)
@@ -56,7 +63,14 @@ async def test_ollama_gateway_uses_embedding_fallback() -> None:
             return httpx.Response(404, json={"error": "model not found"})
         return httpx.Response(200, json={"embeddings": [[0.1, 0.2, 0.3]]})
 
-    gateway = OllamaGateway(Settings())
+    gateway = OllamaGateway(
+        Settings(
+            enable_local_models=True,
+            model_provider_order="ollama",
+            openrouter_api_key="",
+            google_ai_api_key="",
+        )
+    )
     await gateway._client.aclose()
     gateway._client = httpx.AsyncClient(
         base_url="http://ollama.test", transport=httpx.MockTransport(handler)
@@ -64,6 +78,91 @@ async def test_ollama_gateway_uses_embedding_fallback() -> None:
     try:
         assert await gateway.embed(["Mamallapuram"]) == [[0.1, 0.2, 0.3]]
         assert requested_models == ["bge-m3", "all-minilm"]
+    finally:
+        await gateway.close()
+
+
+async def test_openrouter_supplies_exact_gemma_and_bge_models() -> None:
+    requests: list[tuple[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content)
+        requests.append((request.url.path, payload["model"]))
+        assert request.headers["authorization"] == "Bearer test-openrouter-key"
+        if request.url.path == "/chat/completions":
+            return httpx.Response(
+                200,
+                json={"choices": [{"message": {"content": '{"value":"cloud"}'}}]},
+            )
+        return httpx.Response(
+            200,
+            json={"data": [{"index": 0, "embedding": [0.3, 0.4]}]},
+        )
+
+    settings = Settings(
+        enable_local_models=False,
+        model_provider_order="openrouter",
+        openrouter_api_key="test-openrouter-key",
+    )
+    gateway = OllamaGateway(settings)
+    await gateway._openrouter_client.aclose()
+    gateway._openrouter_client = httpx.AsyncClient(
+        base_url="https://openrouter.test", transport=httpx.MockTransport(handler)
+    )
+    try:
+        result = await gateway.chat(
+            model=settings.planner_model,
+            prompt="test",
+            system="test",
+            schema=Answer,
+        )
+        assert result == Answer(value="cloud")
+        assert await gateway.embed(["Mamallapuram"]) == [[0.3, 0.4]]
+        assert requests == [
+            ("/chat/completions", "google/gemma-3-12b-it"),
+            ("/embeddings", "baai/bge-m3"),
+        ]
+    finally:
+        await gateway.close()
+
+
+async def test_google_ai_supplies_chat_and_embedding_fallbacks() -> None:
+    requested_paths: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requested_paths.append(request.url.path)
+        assert request.headers["x-goog-api-key"] == "test-google-key"
+        if request.url.path.endswith(":generateContent"):
+            return httpx.Response(
+                200,
+                json={
+                    "candidates": [
+                        {"content": {"parts": [{"text": '{"value":"google"}' }]}}
+                    ]
+                },
+            )
+        return httpx.Response(200, json={"embeddings": [{"values": [0.5, 0.6]}]})
+
+    settings = Settings(
+        enable_local_models=False,
+        model_provider_order="google",
+        google_ai_api_key="test-google-key",
+    )
+    gateway = OllamaGateway(settings)
+    await gateway._google_client.aclose()
+    gateway._google_client = httpx.AsyncClient(
+        base_url="https://google.test", transport=httpx.MockTransport(handler)
+    )
+    try:
+        result = await gateway.chat(
+            prompt="test", system="test", schema=Answer
+        )
+        assert result == Answer(value="google")
+        assert await gateway.embed(["Chennai"]) == [[0.5, 0.6]]
+        assert requested_paths == [
+            "/models/gemma-4-26b-a4b-it:generateContent",
+            "/models/gemini-embedding-001:batchEmbedContents",
+        ]
     finally:
         await gateway.close()
 
